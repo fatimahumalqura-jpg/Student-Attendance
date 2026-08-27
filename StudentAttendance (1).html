@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>Student Attendance — Um Al-Qura Islamic School</title>
+<style>
+  :root { --teal: #1F4B43; --gold: #C9A227; --cream: #F7F5F0; --red: #B3413B; --gray: #8A8A8A; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--cream); color: #222; }
+  header { background: var(--teal); color: white; padding: 22px 18px; }
+  .header-inner { display: flex; align-items: center; gap: 14px; }
+  header .eyebrow { color: var(--gold); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
+  header h1 { margin: 2px 0 0; font-size: 20px; font-weight: 600; }
+  main { padding: 18px; max-width: 720px; margin: 0 auto; }
+  .hidden { display: none; }
+
+  .landing { max-width: 340px; margin: 50px auto; text-align: center; }
+  .landing p { color: #666; margin-bottom: 20px; }
+  .role-btn { display: block; width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; border: 1px solid #ddd; background: white; font-size: 15px; font-weight: 600; color: var(--teal); cursor: pointer; }
+  .role-btn.admin { border-color: var(--gold); color: var(--gold); }
+
+  .pin-box { max-width: 300px; margin: 40px auto; text-align: center; }
+  .pin-box input { width: 100%; text-align: center; letter-spacing: 8px; font-size: 22px; padding: 14px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 12px; }
+  .pin-box button { width: 100%; padding: 12px; border: none; border-radius: 12px; background: var(--teal); color: white; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .error { color: var(--red); font-size: 13px; margin-top: 8px; }
+  .back-link { display: block; text-align: center; margin-top: 14px; color: #999; font-size: 12px; }
+
+  .row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  input[type=text], input[type=email], input[type=tel], input[type=date] { flex: 1; min-width: 120px; padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; }
+  select { padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; background: white; }
+  button.icon-btn { border: none; border-radius: 10px; padding: 0 14px; color: white; background: var(--teal); cursor: pointer; font-size: 14px; }
+  button.gold-btn { border: none; border-radius: 10px; padding: 10px 14px; color: white; background: var(--gold); cursor: pointer; font-size: 13px; font-weight: 600; }
+  button.danger-btn { border: none; border-radius: 8px; padding: 8px 10px; background: #F7E9E8; color: var(--red); cursor: pointer; font-size: 13px; white-space: nowrap; }
+  button.ghost-btn { border: 1px solid #ddd; border-radius: 10px; padding: 8px 12px; background: white; color: var(--teal); cursor: pointer; font-size: 13px; }
+
+  .card { background: white; border-radius: 14px; padding: 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .card .name { font-weight: 600; color: var(--teal); font-size: 14px; margin: 0; }
+  .card .meta { font-size: 12px; color: #888; margin: 6px 0 0; }
+  .card-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+
+  .section-title { font-size: 13px; color: #888; font-weight: 600; margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .subtle { color: #999; font-size: 13px; }
+
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; }
+  .chip { padding: 7px 14px; border-radius: 999px; font-size: 13px; white-space: nowrap; border: 1px solid #ddd; background: white; color: var(--teal); cursor: pointer; }
+  .chip.active { background: var(--teal); color: white; border-color: var(--teal); }
+
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+  th { background: #EAF3F0; color: var(--teal); font-size: 11px; text-transform: uppercase; }
+  .table-scroll { overflow-x: auto; border-radius: 10px; }
+
+  .summary-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .summary-pill { flex: 1; min-width: 70px; text-align: center; background: white; border-radius: 12px; padding: 10px 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .summary-pill .n { font-size: 18px; font-weight: 700; }
+  .summary-pill .l { font-size: 10px; text-transform: uppercase; color: #999; letter-spacing: 0.04em; }
+
+  .roster-row { display: flex; align-items: center; justify-content: space-between; background: white; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .roster-name { font-size: 14px; font-weight: 600; color: #222; }
+  .roster-btns { display: flex; gap: 6px; }
+  .mini-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid #ddd; background: white; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .mini-btn.present { color: #2E7D4F; border-color: #2E7D4F; }
+  .mini-btn.absent { color: var(--red); border-color: var(--red); }
+  .mini-btn.late { color: var(--gold); border-color: var(--gold); }
+  .mini-btn.excused { color: var(--gray); border-color: var(--gray); }
+  .mini-btn.present.active { background: #2E7D4F; color: white; }
+  .mini-btn.absent.active { background: var(--red); color: white; }
+  .mini-btn.late.active { background: var(--gold); color: white; }
+  .mini-btn.excused.active { background: var(--gray); color: white; }
+
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .badge-present { background: #E4F3EA; color: #2E7D4F; }
+  .badge-absent { background: #F7E9E8; color: var(--red); }
+  .badge-late { background: #FBF1DA; color: #93741A; }
+  .badge-excused { background: #EFEFEF; color: var(--gray); }
+  .badge-unmarked { background: #F5F5F5; color: #bbb; }
+
+  .grid-cell { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; margin: 0 auto; }
+  .grid-cell.present { background: #E4F3EA; color: #2E7D4F; }
+  .grid-cell.absent { background: #F7E9E8; color: var(--red); }
+  .grid-cell.late { background: #FBF1DA; color: #93741A; }
+  .grid-cell.excused { background: #EFEFEF; color: var(--gray); }
+  .grid-cell.blank { background: transparent; color: #ddd; }
+  td.weekend { background: #FAFAFA; }
+
+  .grade-header { font-weight: 700; color: var(--teal); font-size: 13px; margin: 14px 0 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <p class="eyebrow">Um Al-Qura Islamic School</p>
+      <h1>Student Attendance</h1>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- LANDING -->
+  <div id="landing" class="landing">
+    <p>Who's signing in?</p>
+    <button class="role-btn" onclick="goTo('teacherPin')">👩‍🏫 I'm a Teacher</button>
+    <button class="role-btn admin" onclick="goTo('adminPin')">🔑 Admin</button>
+  </div>
+
+  <!-- TEACHER PIN -->
+  <div id="teacherPin" class="pin-box hidden">
+    <p style="color:#666;">Enter teacher PIN</p>
+    <input type="tel" inputmode="numeric" id="teacherPinInput" placeholder="• • • •" maxlength="6" />
+    <button onclick="tryTeacherUnlock()">Continue</button>
+    <p class="error hidden" id="teacherPinError">PIN not recognized.</p>
+    <a class="back-link" href="#" onclick="goTo('landing')">← Back</a>
+  </div>
+
+  <!-- ADMIN PIN -->
+  <div id="adminPin" class="pin-box hidden">
+    <p style="color:#666;">Admin PIN</p>
+    <input type="password" inputmode="numeric" id="adminPinInput" placeholder="• • • •" />
+    <button onclick="tryAdminUnlock()">Continue</button>
+    <p class="error hidden" id="adminPinError">Incorrect PIN.</p>
+    <a class="back-link" href="#" onclick="goTo('landing')">← Back</a>
+  </div>
+
+  <!-- TEACHER DASHBOARD -->
+  <div id="teacherDash" class="hidden">
+    <div class="row">
+      <select id="teacherGradeSelect" style="flex:1;" onchange="onTeacherGradeChange()"></select>
+      <input type="date" id="teacherDateInput" style="flex:1;" onchange="renderTeacherRoster()" />
+    </div>
+    <div class="row">
+      <input type="text" id="teacherNameInput" placeholder="Marking as (your name, optional)" onchange="saveTeacherName()" />
+    </div>
+
+    <div class="summary-bar" id="teacherSummaryBar"></div>
+
+    <div class="row">
+      <button class="ghost-btn" onclick="markAllPresent()">✓ Mark remaining as Present</button>
+    </div>
+
+    <div id="teacherRoster"></div>
+
+    <a class="back-link" href="#" onclick="goTo('landing')">← Switch user</a>
+  </div>
+
+  <!-- ADMIN DASHBOARD -->
+  <div id="adminDash" class="hidden">
+    <div class="chips">
+      <button class="chip active" onclick="setAdminView('manage', this)">Manage</button>
+      <button class="chip" onclick="setAdminView('daily', this)">Daily Report</button>
+      <button class="chip" onclick="setAdminView('monthly', this)">Monthly Grid</button>
+    </div>
+
+    <!-- MANAGE -->
+    <div id="adminManage">
+      <p class="section-title">Add grade</p>
+      <div class="row">
+        <input type="text" id="newGradeName" placeholder="e.g. Grade 3" />
+        <button class="icon-btn" onclick="addGrade()">Add</button>
+      </div>
+      <div id="gradesList"></div>
+
+      <p class="section-title">Add student</p>
+      <div class="row">
+        <input type="text" id="newStudentFirst" placeholder="First name" />
+        <input type="text" id="newStudentLast" placeholder="Last name" />
+      </div>
+      <div class="row">
+        <select id="newStudentGrade" style="flex:1;"></select>
+      </div>
+      <div class="row">
+        <input type="text" id="newStudentParentName" placeholder="Parent/guardian name" />
+      </div>
+      <div class="row">
+        <input type="email" id="newStudentParentEmail" placeholder="Parent email" />
+        <input type="tel" id="newStudentParentPhone" placeholder="Parent phone" />
+      </div>
+      <div class="row">
+        <button class="icon-btn" onclick="addStudent()">Add student</button>
+      </div>
+
+      <p class="section-title">Students</p>
+      <div class="row"><select id="manageGradeFilter" style="flex:1;" onchange="renderStudentsList()"></select></div>
+      <div id="studentsList"></div>
+    </div>
+
+    <!-- DAILY REPORT -->
+    <div id="adminDaily" class="hidden">
+      <div class="row">
+        <input type="date" id="dailyReportDate" style="flex:1;" onchange="renderDailyReport()" />
+        <select id="dailyReportGrade" style="flex:1;" onchange="renderDailyReport()"></select>
+      </div>
+      <div class="chips" id="dailyStatusChips">
+        <button class="chip active" onclick="setDailyStatusFilter('absent_late', this)">Absent + Late</button>
+        <button class="chip" onclick="setDailyStatusFilter('absent', this)">Absent</button>
+        <button class="chip" onclick="setDailyStatusFilter('late', this)">Late</button>
+        <button class="chip" onclick="setDailyStatusFilter('excused', this)">Excused</button>
+        <button class="chip" onclick="setDailyStatusFilter('present', this)">Present</button>
+        <button class="chip" onclick="setDailyStatusFilter('unmarked', this)">Unmarked</button>
+        <button class="chip" onclick="setDailyStatusFilter('all', this)">All</button>
+      </div>
+      <div class="row">
+        <button class="gold-btn" onclick="emailAllFiltered()">✉️ Email all in this filter</button>
+        <button class="ghost-btn" onclick="emailSelected()">✉️ Email selected</button>
+      </div>
+      <p class="subtle" id="dailyEmailStatus"></p>
+      <div class="table-scroll" id="dailyReportTableWrap"></div>
+    </div>
+
+    <!-- MONTHLY GRID -->
+    <div id="adminMonthly" class="hidden">
+      <div class="row">
+        <select id="monthlyGradeSelect" style="flex:1;" onchange="renderMonthlyGrid()"></select>
+        <select id="monthlyMonthSelect" style="flex:1;" onchange="renderMonthlyGrid()"></select>
+      </div>
+      <p class="subtle">P = Present · A = Absent · L = Late · E = Excused. Blank = no record for that day.</p>
+      <div class="table-scroll" id="monthlyGridWrap"></div>
+    </div>
+
+    <a class="back-link" href="#" onclick="goTo('landing')">← Switch user</a>
+  </div>
+
+</main>
+
+<footer style="text-align:center; padding: 24px 18px 32px; color:#888; font-size:12px; line-height:1.7;">
+  <p style="margin:0;">265 Yorkland Blvd, North York, ON, M2J 1S5</p>
+  <p style="margin:2px 0 0;">Tel: 416-443-3557 &nbsp;|&nbsp; umalqura.ca</p>
+  <p style="margin:2px 0 0;">Um-al_qura@hotmail.com &nbsp;|&nbsp; umaqtoronto@gmail.com</p>
+</footer>
+
+<script>
+const APP_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+const TEACHER_PIN = "1111"; // ⚠️ change before sharing the link
+const ADMIN_PIN = "2580";   // ⚠️ change before sharing the link
+
+let state = { students: [], grades: [], attendance: [] };
+let teacherSelectedGrade = null;
+let dailyStatusFilter = 'absent_late';
+let adminView = 'manage';
+
+// ---- date/time helpers (Toronto) ----
+function torontoParts_() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Toronto', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(new Date());
+  const out = {};
+  parts.forEach(p => { if (p.type !== 'literal') out[p.type] = p.value; });
+  return out;
+}
+function todayStr() {
+  const p = torontoParts_();
+  return `${p.year}-${p.month}-${p.day}`;
+}
+function normalizeDate_(value) {
+  return String(value || '').slice(0, 10);
+}
+function normalizeAttendance_(list) {
+  return (list || []).map(a => ({ ...a, date: normalizeDate_(a.date), status: String(a.status || '').toLowerCase() }));
+}
+function uid(p) { return p + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000); }
+function esc(s) { return String(s == null ? '' : s); }
+
+// ---- state loading ----
+async function loadState() {
+  if (!APP_URL || APP_URL.indexOf("PASTE_YOUR") === 0) {
+    throw new Error("APP_URL not set — paste your Apps Script URL into the code first.");
+  }
+  const res = await fetch(APP_URL);
+  if (!res.ok) throw new Error("Server responded with an error (" + res.status + ").");
+  const data = await res.json();
+  state.students = Array.isArray(data.students) ? data.students : [];
+  state.grades = Array.isArray(data.grades) ? data.grades : [];
+  state.attendance = normalizeAttendance_(data.attendance);
+}
+
+async function post(action, payload) {
+  const res = await fetch(APP_URL, { method: "POST", body: JSON.stringify({ action, ...payload }) });
+  if (!res.ok) throw new Error("Server responded with an error (" + res.status + ").");
+  try { return await res.json(); } catch (e) { return {}; }
+}
+
+// ---- grade ordering ----
+function gradeNamesInOrder() {
+  const fromSheet = state.grades.map(g => g.name).filter(Boolean);
+  const extra = [...new Set(state.students.map(s => s.grade).filter(Boolean))].filter(g => fromSheet.indexOf(g) === -1);
+  return fromSheet.concat(extra);
+}
+function gradeOrderMap() {
+  const names = gradeNamesInOrder();
+  const map = {};
+  names.forEach((n, i) => { map[n] = i; });
+  return map;
+}
+function sortStudents(list) {
+  const order = gradeOrderMap();
+  return list.slice().sort((a, b) => {
+    const gA = order[a.grade] ?? 999, gB = order[b.grade] ?? 999;
+    if (gA !== gB) return gA - gB;
+    const lA = (a.lastName || '').toLowerCase(), lB = (b.lastName || '').toLowerCase();
+    if (lA !== lB) return lA.localeCompare(lB);
+    return (a.firstName || '').toLowerCase().localeCompare((b.firstName || '').toLowerCase());
+  });
+}
+function fullName(s) { return `${s.firstName} ${s.lastName}`; }
+
+function goTo(screenId) {
+  ['landing', 'teacherPin', 'adminPin', 'teacherDash', 'adminDash'].forEach(id =>
+    document.getElementById(id).classList.toggle('hidden', id !== screenId)
+  );
+  document.getElementById('teacherPinError').classList.add('hidden');
+  document.getElementById('adminPinError').classList.add('hidden');
+}
+
+// ================= TEACHER =================
+async function tryTeacherUnlock() {
+  const errEl = document.getElementById('teacherPinError');
+  const pin = document.getElementById('teacherPinInput').value.trim();
+  if (pin !== TEACHER_PIN) {
+    errEl.innerText = "PIN not recognized.";
+    errEl.classList.remove('hidden');
+    return;
+  }
+  try {
+    await loadState();
+  } catch (err) {
+    errEl.innerText = "Couldn't load data: " + err.message;
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const savedName = localStorage.getItem('uaq_teacherName') || '';
+  document.getElementById('teacherNameInput').value = savedName;
+
+  const dateInput = document.getElementById('teacherDateInput');
+  dateInput.value = todayStr();
+  dateInput.max = todayStr();
+
+  populateTeacherGradeSelect();
+  renderTeacherRoster();
+  goTo('teacherDash');
+}
+
+function saveTeacherName() {
+  localStorage.setItem('uaq_teacherName', document.getElementById('teacherNameInput').value.trim());
+}
+
+function populateTeacherGradeSelect() {
+  const sel = document.getElementById('teacherGradeSelect');
+  const names = gradeNamesInOrder();
+  if (!names.length) {
+    sel.innerHTML = '<option value="">No grades yet — ask admin to add one</option>';
+    teacherSelectedGrade = null;
+    return;
+  }
+  const saved = localStorage.getItem('uaq_teacherGrade');
+  teacherSelectedGrade = names.indexOf(saved) > -1 ? saved : names[0];
+  sel.innerHTML = names.map(n => `<option value="${n}" ${n === teacherSelectedGrade ? 'selected' : ''}>${n}</option>`).join('');
+}
+
+function onTeacherGradeChange() {
+  teacherSelectedGrade = document.getElementById('teacherGradeSelect').value;
+  localStorage.setItem('uaq_teacherGrade', teacherSelectedGrade);
+  renderTeacherRoster();
+}
+
+function attendanceFor(date, studentId) {
+  return state.attendance.find(a => a.date === date && String(a.studentId) === String(studentId));
+}
+
+function renderTeacherRoster() {
+  const date = document.getElementById('teacherDateInput').value || todayStr();
+  const grade = teacherSelectedGrade;
+  const roster = sortStudents(state.students.filter(s => s.grade === grade));
+
+  const counts = { present: 0, absent: 0, late: 0, excused: 0, unmarked: 0 };
+  const rows = roster.map(s => {
+    const rec = attendanceFor(date, s.id);
+    const status = rec ? rec.status : 'unmarked';
+    counts[status] = (counts[status] || 0) + 1;
+    return `<div class="roster-row">
+      <div class="roster-name">${esc(fullName(s))}</div>
+      <div class="roster-btns">
+        <button class="mini-btn present ${status === 'present' ? 'active' : ''}" onclick="markStudent('${s.id}','present')">P</button>
+        <button class="mini-btn absent ${status === 'absent' ? 'active' : ''}" onclick="markStudent('${s.id}','absent')">A</button>
+        <button class="mini-btn late ${status === 'late' ? 'active' : ''}" onclick="markStudent('${s.id}','late')">L</button>
+        <button class="mini-btn excused ${status === 'excused' ? 'active' : ''}" onclick="markStudent('${s.id}','excused')">E</button>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('teacherRoster').innerHTML = roster.length
+    ? rows.join('')
+    : '<p class="subtle">No students in this grade yet.</p>';
+
+  document.getElementById('teacherSummaryBar').innerHTML = `
+    <div class="summary-pill"><div class="n" style="color:#2E7D4F;">${counts.present}</div><div class="l">Present</div></div>
+    <div class="summary-pill"><div class="n" style="color:var(--red);">${counts.absent}</div><div class="l">Absent</div></div>
+    <div class="summary-pill"><div class="n" style="color:#93741A;">${counts.late}</div><div class="l">Late</div></div>
+    <div class="summary-pill"><div class="n" style="color:var(--gray);">${counts.excused}</div><div class="l">Excused</div></div>
+    <div class="summary-pill"><div class="n" style="color:#bbb;">${counts.unmarked}</div><div class="l">Unmarked</div></div>
+  `;
+}
+
+function upsertAttendanceLocal(entry) {
+  const idx = state.attendance.findIndex(a => a.date === entry.date && String(a.studentId) === String(entry.studentId));
+  if (idx > -1) state.attendance[idx] = entry; else state.attendance.push(entry);
+}
+
+async function markStudent(studentId, status) {
+  const date = document.getElementById('teacherDateInput').value || todayStr();
+  const student = state.students.find(s => s.id === studentId);
+  if (!student) return;
+
+  const entry = {
+    date, studentId, grade: student.grade, name: fullName(student), status,
+    markedBy: document.getElementById('teacherNameInput').value.trim()
+  };
+
+  upsertAttendanceLocal(entry);
+  renderTeacherRoster();
+
+  try {
+    await post('markAttendance', entry);
+  } catch (err) {
+    alert("Couldn't save this attendance mark: " + err.message);
+    try { await loadState(); } catch (_) {}
+    renderTeacherRoster();
+  }
+}
+
+async function markAllPresent() {
+  const date = document.getElementById('teacherDateInput').value || todayStr();
+  const roster = sortStudents(state.students.filter(s => s.grade === teacherSelectedGrade));
+  const toMark = roster.filter(s => !attendanceFor(date, s.id));
+  if (!toMark.length) { alert("Everyone in this grade already has a mark for this date."); return; }
+
+  for (const s of toMark) {
+    await markStudent(s.id, 'present');
+  }
+}
+
+// ================= ADMIN =================
+async function tryAdminUnlock() {
+  const errEl = document.getElementById('adminPinError');
+  const val = document.getElementById('adminPinInput').value.trim();
+  if (val !== ADMIN_PIN) { errEl.innerText = "Incorrect PIN."; errEl.classList.remove('hidden'); return; }
+  try {
+    await loadState();
+  } catch (err) {
+    errEl.innerText = "Couldn't load data: " + err.message;
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  document.getElementById('dailyReportDate').value = todayStr();
+  document.getElementById('dailyReportDate').max = todayStr();
+
+  setAdminView('manage', document.querySelector('#adminDash .chips .chip'));
+  refreshAllAdminSelects();
+  renderGradesList();
+  renderStudentsList();
+  renderDailyReport();
+  renderMonthlyGrid();
+  goTo('adminDash');
+}
+
+function setAdminView(view, btnEl) {
+  adminView = view;
+  document.querySelectorAll('#adminDash > .chips .chip').forEach(c => c.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  document.getElementById('adminManage').classList.toggle('hidden', view !== 'manage');
+  document.getElementById('adminDaily').classList.toggle('hidden', view !== 'daily');
+  document.getElementById('adminMonthly').classList.toggle('hidden', view !== 'monthly');
+  if (view === 'daily') renderDailyReport();
+  if (view === 'monthly') renderMonthlyGrid();
+}
+
+function refreshAllAdminSelects() {
+  const names = gradeNamesInOrder();
+  const opts = names.map(n => `<option value="${n}">${n}</option>`).join('');
+
+  document.getElementById('newStudentGrade').innerHTML = opts || '<option value="">Add a grade first</option>';
+
+  document.getElementById('manageGradeFilter').innerHTML = '<option value="all">All grades</option>' + opts;
+  document.getElementById('dailyReportGrade').innerHTML = '<option value="all">All grades</option>' + opts;
+  document.getElementById('monthlyGradeSelect').innerHTML = opts || '<option value="">Add a grade first</option>';
+
+  const monthSel = document.getElementById('monthlyMonthSelect');
+  const months = new Set(state.attendance.map(a => a.date.slice(0, 7)).filter(Boolean));
+  months.add(todayStr().slice(0, 7));
+  const sorted = [...months].sort().reverse();
+  monthSel.innerHTML = sorted.map(m => {
+    const label = new Date(m + "-01T00:00:00").toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    return `<option value="${m}">${label}</option>`;
+  }).join('');
+}
+
+// ---- Manage: grades ----
+async function addGrade() {
+  const name = document.getElementById('newGradeName').value.trim();
+  if (!name) return;
+  if (gradeNamesInOrder().indexOf(name) > -1) { alert('That grade already exists.'); return; }
+  const g = { id: uid('g'), name };
+  state.grades.push(g);
+  document.getElementById('newGradeName').value = '';
+  refreshAllAdminSelects();
+  renderGradesList();
+  try {
+    await post('addGrade', g);
+  } catch (err) {
+    alert("Couldn't save this grade: " + err.message);
+  }
+}
+
+function renderGradesList() {
+  const wrap = document.getElementById('gradesList');
+  if (!state.grades.length) { wrap.innerHTML = '<p class="subtle">No grades added yet.</p>'; return; }
+  wrap.innerHTML = state.grades.map(g => `
+    <div class="card card-row">
+      <p class="name">${esc(g.name)}</p>
+      <button class="danger-btn" onclick="deleteGrade('${g.id}','${esc(g.name).replace(/'/g, "\\'")}')">🗑 Remove</button>
+    </div>
+  `).join('');
+}
+
+async function deleteGrade(id, name) {
+  const inUse = state.students.some(s => s.grade === name);
+  if (inUse && !confirm(`${name} still has students assigned to it. Remove the grade anyway? (Students keep their grade label.)`)) return;
+  state.grades = state.grades.filter(g => g.id !== id);
+  refreshAllAdminSelects();
+  renderGradesList();
+  try {
+    await post('deleteGrade', { id });
+  } catch (err) {
+    alert('Could not delete: ' + err.message);
+  }
+}
+
+// ---- Manage: students ----
+async function addStudent() {
+  const firstName = document.getElementById('newStudentFirst').value.trim();
+  const lastName = document.getElementById('newStudentLast').value.trim();
+  const grade = document.getElementById('newStudentGrade').value;
+  const parentName = document.getElementById('newStudentParentName').value.trim();
+  const parentEmail = document.getElementById('newStudentParentEmail').value.trim();
+  const parentPhone = document.getElementById('newStudentParentPhone').value.trim();
+
+  if (!firstName || !lastName || !grade) { alert('First name, last name, and grade are required.'); return; }
+
+  const studentId = 'UAQ-S' + String(state.students.length + 1).padStart(4, '0');
+  const s = { id: uid('s'), studentId, firstName, lastName, grade, parentName, parentEmail, parentPhone };
+  state.students.push(s);
+
+  ['newStudentFirst', 'newStudentLast', 'newStudentParentName', 'newStudentParentEmail', 'newStudentParentPhone']
+    .forEach(id => document.getElementById(id).value = '');
+
+  renderStudentsList();
+  try {
+    await post('addStudent', s);
+  } catch (err) {
+    alert("Couldn't save this student: " + err.message);
+  }
+}
+
+function renderStudentsList() {
+  const wrap = document.getElementById('studentsList');
+  const filterGrade = document.getElementById('manageGradeFilter').value || 'all';
+  const list = sortStudents(state.students.filter(s => filterGrade === 'all' || s.grade === filterGrade));
+
+  if (!list.length) { wrap.innerHTML = '<p class="subtle">No students in this view yet.</p>'; return; }
+
+  let html = '';
+  let lastGrade = null;
+  list.forEach(s => {
+    if (s.grade !== lastGrade) {
+      html += `<p class="grade-header">${esc(s.grade || 'No grade')}</p>`;
+      lastGrade = s.grade;
+    }
+    const metaParts = [s.studentId, s.parentName, s.parentPhone, s.parentEmail].filter(Boolean);
+    html += `<div class="card">
+      <div class="card-row">
+        <p class="name">${esc(fullName(s))}</p>
+        <button class="danger-btn" onclick="deleteStudent('${s.id}','${esc(fullName(s)).replace(/'/g, "\\'")}')">🗑 Remove</button>
+      </div>
+      <p class="meta">${esc(metaParts.join(' · '))}</p>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+async function deleteStudent(id, name) {
+  if (!confirm(`Remove ${name} from the roster? Their past attendance history stays in the log.`)) return;
+  state.students = state.students.filter(s => s.id !== id);
+  refreshAllAdminSelects();
+  renderStudentsList();
+  try {
+    await post('deleteStudent', { id });
+  } catch (err) {
+    alert('Could not delete: ' + err.message);
+  }
+}
+
+// ---- Daily report ----
+function setDailyStatusFilter(mode, btnEl) {
+  dailyStatusFilter = mode;
+  document.querySelectorAll('#dailyStatusChips .chip').forEach(c => c.classList.remove('active'));
+  btnEl.classList.add('active');
+  renderDailyReport();
+}
+
+function statusMatchesFilter_(status, filter) {
+  if (filter === 'all') return true;
+  if (filter === 'absent_late') return status === 'absent' || status === 'late';
+  return status === filter;
+}
+
+function renderDailyReport() {
+  const date = document.getElementById('dailyReportDate').value || todayStr();
+  const grade = document.getElementById('dailyReportGrade').value || 'all';
+  const roster = sortStudents(state.students.filter(s => grade === 'all' || s.grade === grade));
+
+  const rows = roster.map(s => {
+    const rec = attendanceFor(date, s.id);
+    const status = rec ? rec.status : 'unmarked';
+    return { student: s, status };
+  }).filter(r => statusMatchesFilter_(r.status, dailyStatusFilter));
+
+  const wrap = document.getElementById('dailyReportTableWrap');
+  if (!rows.length) {
+    wrap.innerHTML = '<p class="subtle">No students match this filter for the selected date.</p>';
+    return;
+  }
+
+  const trs = rows.map(r => {
+    const s = r.student;
+    const canEmail = ['absent', 'late', 'excused'].indexOf(r.status) > -1 && !!s.parentEmail;
+    return `<tr>
+      <td><input type="checkbox" class="daily-check" data-id="${s.id}" data-status="${r.status}" /></td>
+      <td>${esc(fullName(s))}</td>
+      <td>${esc(s.grade)}</td>
+      <td><span class="badge badge-${r.status}">${r.status}</span></td>
+      <td>${esc(s.parentPhone) || '—'}</td>
+      <td>${esc(s.parentEmail) || '—'}</td>
+      <td>${canEmail
+        ? `<button class="ghost-btn" onclick="emailOne('${s.id}','${date}','${r.status}')">✉️ Email</button>`
+        : `<span class="subtle">—</span>`}</td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table>
+    <tr><th></th><th>Name</th><th>Grade</th><th>Status</th><th>Phone</th><th>Email</th><th></th></tr>
+    ${trs}
+  </table>`;
+}
+
+async function emailOne(studentId, date, status) {
+  document.getElementById('dailyEmailStatus').innerText = 'Sending…';
+  try {
+    const result = await post('sendAbsenceEmail', { studentId, date, status });
+    document.getElementById('dailyEmailStatus').innerText = result.ok ? 'Email sent.' : ('Could not send: ' + (result.error || 'unknown error'));
+  } catch (err) {
+    document.getElementById('dailyEmailStatus').innerText = 'Could not send: ' + err.message;
+  }
+}
+
+async function emailSelected() {
+  const date = document.getElementById('dailyReportDate').value || todayStr();
+  const checks = [...document.querySelectorAll('.daily-check:checked')];
+  if (!checks.length) { alert('Select at least one student first.'); return; }
+
+  document.getElementById('dailyEmailStatus').innerText = `Sending 0/${checks.length}…`;
+  let sent = 0, failed = 0;
+  for (let i = 0; i < checks.length; i++) {
+    const el = checks[i];
+    try {
+      const result = await post('sendAbsenceEmail', { studentId: el.dataset.id, date, status: el.dataset.status });
+      if (result.ok) sent++; else failed++;
+    } catch (err) { failed++; }
+    document.getElementById('dailyEmailStatus').innerText = `Sending ${i + 1}/${checks.length}…`;
+  }
+  document.getElementById('dailyEmailStatus').innerText = `Done. Sent: ${sent}${failed ? `, failed/skipped: ${failed}` : ''}.`;
+}
+
+async function emailAllFiltered() {
+  const date = document.getElementById('dailyReportDate').value || todayStr();
+  const grade = document.getElementById('dailyReportGrade').value || 'all';
+
+  let statuses;
+  if (dailyStatusFilter === 'all') statuses = ['absent', 'late', 'excused'];
+  else if (dailyStatusFilter === 'absent_late') statuses = ['absent', 'late'];
+  else if (['absent', 'late', 'excused'].indexOf(dailyStatusFilter) > -1) statuses = [dailyStatusFilter];
+  else { alert('Emails only apply to Absent, Late, or Excused statuses.'); return; }
+
+  if (!confirm(`Send an attendance email to every matching parent for ${date}?`)) return;
+
+  document.getElementById('dailyEmailStatus').innerText = 'Sending…';
+  try {
+    const result = await post('sendBulkEmails', { date, grade, statuses });
+    document.getElementById('dailyEmailStatus').innerText = result.ok
+      ? `Done. Sent: ${result.sent}, skipped (no email on file): ${result.skipped}.`
+      : 'Could not send: ' + (result.error || 'unknown error');
+  } catch (err) {
+    document.getElementById('dailyEmailStatus').innerText = 'Could not send: ' + err.message;
+  }
+}
+
+// ---- Monthly grid ----
+function daysInMonth_(year, month) { return new Date(year, month, 0).getDate(); }
+
+function renderMonthlyGrid() {
+  const grade = document.getElementById('monthlyGradeSelect').value;
+  const month = document.getElementById('monthlyMonthSelect').value;
+  const wrap = document.getElementById('monthlyGridWrap');
+
+  if (!grade || !month) {
+    wrap.innerHTML = '<p class="subtle">Add a grade first.</p>';
+    return;
+  }
+
+  const [year, mo] = month.split('-').map(Number);
+  const numDays = daysInMonth_(year, mo);
+  const roster = sortStudents(state.students.filter(s => s.grade === grade));
+
+  if (!roster.length) {
+    wrap.innerHTML = '<p class="subtle">No students in this grade yet.</p>';
+    return;
+  }
+
+  const dayCols = [];
+  for (let d = 1; d <= numDays; d++) {
+    const dow = new Date(year, mo - 1, d).getDay();
+    dayCols.push({ d, weekend: dow === 0 || dow === 6 });
+  }
+
+  const headerRow = `<tr>
+    <th style="position:sticky;left:0;background:#EAF3F0;">Student</th>
+    ${dayCols.map(c => `<th class="${c.weekend ? 'weekend' : ''}">${c.d}</th>`).join('')}
+    <th>P</th><th>A</th><th>L</th><th>E</th>
+  </tr>`;
+
+  const statusLetter = { present: 'P', absent: 'A', late: 'L', excused: 'E' };
+
+  const bodyRows = roster.map(s => {
+    const counts = { present: 0, absent: 0, late: 0, excused: 0 };
+    const cells = dayCols.map(c => {
+      const dateStr = `${year}-${String(mo).padStart(2, '0')}-${String(c.d).padStart(2, '0')}`;
+      const rec = attendanceFor(dateStr, s.id);
+      if (!rec) return `<td class="${c.weekend ? 'weekend' : ''}"><div class="grid-cell blank">·</div></td>`;
+      counts[rec.status] = (counts[rec.status] || 0) + 1;
+      return `<td class="${c.weekend ? 'weekend' : ''}"><div class="grid-cell ${rec.status}">${statusLetter[rec.status] || '?'}</div></td>`;
+    }).join('');
+    return `<tr>
+      <td style="position:sticky;left:0;background:white;font-weight:600;">${esc(fullName(s))}</td>
+      ${cells}
+      <td>${counts.present}</td><td>${counts.absent}</td><td>${counts.late}</td><td>${counts.excused}</td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table>${headerRow}${bodyRows}</table>`;
+}
+
+document.getElementById('teacherPinInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryTeacherUnlock(); });
+document.getElementById('adminPinInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryAdminUnlock(); });
+</script>
+</body>
+</html>
