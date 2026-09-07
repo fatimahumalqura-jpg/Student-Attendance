@@ -4,66 +4,78 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>Student Attendance — Um Al-Qura Islamic School</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root { --teal: #1F4B43; --gold: #C9A227; --cream: #F7F5F0; --red: #B3413B; --gray: #8A8A8A; }
+  :root { --teal: #1F4B43; --teal-dark: #143530; --gold: #C9A227; --cream: #F7F5F0; --red: #B3413B; --gray: #8A8A8A; --ink: #1C2521; --line: #E7E4DC; --shadow: 0 1px 2px rgba(20,30,25,0.05), 0 2px 8px rgba(20,30,25,0.05); }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--cream); color: #222; }
-  header { background: var(--teal); color: white; padding: 22px 18px; }
+  body { margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--cream); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  header { background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%); color: white; padding: 22px 18px; border-bottom: 3px solid var(--gold); }
   .header-inner { display: flex; align-items: center; gap: 14px; max-width: 1200px; margin: 0 auto; }
-  header .eyebrow { color: var(--gold); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
-  header h1 { margin: 2px 0 0; font-size: 20px; font-weight: 600; }
+  header .eyebrow { color: var(--gold); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; margin: 0; font-weight: 600; }
+  header h1 { margin: 3px 0 0; font-size: 21px; font-weight: 700; letter-spacing: -0.01em; }
   main { padding: 18px; max-width: 1200px; margin: 0 auto; }
   .hidden { display: none; }
+  h1, h2, .name, .roster-name, .grade-header, summary { letter-spacing: -0.01em; }
 
   .landing { max-width: 340px; margin: 50px auto; text-align: center; }
   .landing p { color: #666; margin-bottom: 20px; }
-  .role-btn { display: block; width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; border: 1px solid #ddd; background: white; font-size: 15px; font-weight: 600; color: var(--teal); cursor: pointer; }
-  .role-btn.admin { border-color: var(--gold); color: var(--gold); }
+  .role-btn { display: block; width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; border: 1px solid var(--line); background: white; font-size: 15px; font-weight: 600; color: var(--teal); cursor: pointer; box-shadow: var(--shadow); transition: transform 0.1s, box-shadow 0.15s; }
+  .role-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(20,30,25,0.10); }
+  .role-btn.admin { border-color: var(--gold); color: #8a6d10; }
 
   .pin-box { max-width: 300px; margin: 40px auto; text-align: center; }
-  .pin-box input { width: 100%; text-align: center; letter-spacing: 8px; font-size: 22px; padding: 14px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 12px; }
+  .pin-box input { width: 100%; text-align: center; letter-spacing: 8px; font-size: 22px; padding: 14px; border-radius: 12px; border: 1px solid var(--line); margin-bottom: 12px; }
   .pin-box button { width: 100%; padding: 12px; border: none; border-radius: 12px; background: var(--teal); color: white; font-size: 15px; font-weight: 600; cursor: pointer; }
   .error { color: var(--red); font-size: 13px; margin-top: 8px; }
   .back-link { display: block; text-align: center; margin-top: 14px; color: #999; font-size: 12px; }
 
   .row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-  input[type=text], input[type=email], input[type=tel], input[type=date], input[type=file] { flex: 1; min-width: 120px; padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; background: white; }
-  select { padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; background: white; }
-  textarea { flex: 1; min-width: 120px; padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; font-family: inherit; resize: vertical; min-height: 44px; }
-  button.icon-btn { border: none; border-radius: 10px; padding: 0 14px; color: white; background: var(--teal); cursor: pointer; font-size: 14px; }
-  button.gold-btn { border: none; border-radius: 10px; padding: 10px 14px; color: white; background: var(--gold); cursor: pointer; font-size: 13px; font-weight: 600; }
-  button.danger-btn { border: none; border-radius: 8px; padding: 8px 10px; background: #F7E9E8; color: var(--red); cursor: pointer; font-size: 13px; white-space: nowrap; }
-  button.ghost-btn { border: 1px solid #ddd; border-radius: 10px; padding: 8px 12px; background: white; color: var(--teal); cursor: pointer; font-size: 13px; }
+  input[type=text], input[type=email], input[type=tel], input[type=date], input[type=file] { flex: 1; min-width: 120px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); font-size: 14px; background: white; font-family: inherit; transition: border-color 0.15s; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--teal); }
+  select { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); font-size: 14px; background: white; font-family: inherit; }
+  textarea { flex: 1; min-width: 120px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); font-size: 14px; font-family: inherit; resize: vertical; min-height: 44px; }
+  button { font-family: inherit; transition: filter 0.12s, transform 0.1s; }
+  button:hover { filter: brightness(1.06); }
+  button:active { transform: scale(0.98); }
+  button.icon-btn { border: none; border-radius: 10px; padding: 0 16px; height: 40px; color: white; background: var(--teal); cursor: pointer; font-size: 14px; font-weight: 600; }
+  button.gold-btn { border: none; border-radius: 10px; padding: 10px 14px; color: white; background: var(--gold); cursor: pointer; font-size: 13px; font-weight: 700; }
+  button.danger-btn { border: none; border-radius: 8px; padding: 8px 10px; background: #F7E9E8; color: var(--red); cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  button.ghost-btn { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; background: white; color: var(--teal); cursor: pointer; font-size: 13px; font-weight: 600; }
+  button.ghost-btn:hover { background: #EAF3F0; }
 
-  .card { background: white; border-radius: 14px; padding: 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-  .card .name { font-weight: 600; color: var(--teal); font-size: 14px; margin: 0; }
+  .card { background: white; border-radius: 14px; padding: 14px; margin-bottom: 8px; box-shadow: var(--shadow); }
+  .card .name { font-weight: 700; color: var(--teal); font-size: 14px; margin: 0; }
   .card .meta { font-size: 12px; color: #888; margin: 6px 0 0; line-height: 1.6; }
   .card-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 
-  .section-title { font-size: 13px; color: #888; font-weight: 600; margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .section-title { font-size: 12px; color: #8a8578; font-weight: 700; margin: 24px 0 10px; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 12px; border-top: 1px solid var(--line); }
+  .section-title:first-of-type { border-top: none; padding-top: 0; margin-top: 4px; }
   .subtle { color: #999; font-size: 13px; }
-  .panel-box { background: white; border: 1px dashed #ddd; border-radius: 14px; padding: 16px; margin-bottom: 10px; }
+  .panel-box { background: white; border: 1px dashed #cfc9b8; border-radius: 14px; padding: 16px; margin-bottom: 10px; box-shadow: var(--shadow); }
 
   .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; }
-  .chip { padding: 7px 14px; border-radius: 999px; font-size: 13px; white-space: nowrap; border: 1px solid #ddd; background: white; color: var(--teal); cursor: pointer; }
+  .chip { padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; border: 1px solid var(--line); background: white; color: var(--teal); cursor: pointer; transition: background 0.12s; }
   .chip.active { background: var(--teal); color: white; border-color: var(--teal); }
 
   /* compact grade chip grid — one tile per grade sheet */
   .grade-chip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 8px; }
-  .grade-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: white; border-radius: 10px; padding: 8px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .grade-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: white; border-radius: 10px; padding: 8px 10px; box-shadow: var(--shadow); }
   .grade-chip .name { font-weight: 600; color: var(--teal); font-size: 13px; margin: 0; }
   .grade-chip button.danger-btn { padding: 5px 8px; font-size: 11px; }
 
   table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; font-size: 13px; }
-  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
-  th { background: #EAF3F0; color: var(--teal); font-size: 11px; text-transform: uppercase; }
-  .table-scroll { overflow-x: auto; border-radius: 10px; }
+  th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+  th { background: #EAF3F0; color: var(--teal); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+  tbody tr:hover td, tr:hover td { background: #FAFBF7; }
+  .table-scroll { overflow-x: auto; border-radius: 10px; box-shadow: var(--shadow); }
 
   .summary-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-  .summary-pill { flex: 1; min-width: 70px; text-align: center; background: white; border-radius: 12px; padding: 10px 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-  .summary-pill .n { font-size: 18px; font-weight: 700; }
-  .summary-pill .l { font-size: 10px; text-transform: uppercase; color: #999; letter-spacing: 0.04em; }
+  .summary-pill { flex: 1; min-width: 70px; text-align: center; background: white; border-radius: 12px; padding: 12px 6px; box-shadow: var(--shadow); }
+  .summary-pill .n { font-size: 20px; font-weight: 800; }
+  .summary-pill .l { font-size: 10px; text-transform: uppercase; color: #999; letter-spacing: 0.05em; font-weight: 600; }
 
   .roster-row { display: flex; align-items: center; justify-content: space-between; background: white; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
   .roster-name { font-size: 14px; font-weight: 600; color: #222; }
@@ -93,7 +105,11 @@
   .grid-cell.blank { background: transparent; color: #ddd; }
   td.weekend, th.weekend { background: #FAFAFA; }
 
-  .grade-header { font-weight: 700; color: var(--teal); font-size: 13px; margin: 14px 0 6px; }
+  .grade-header { font-weight: 800; color: var(--teal); font-size: 15px; margin: 0 0 8px; padding-bottom: 6px; border-bottom: 2px solid var(--gold); }
+
+  /* One section per grade in Weekly/Monthly reports (and the school summary) */
+  .grid-section { background: white; border-radius: 14px; padding: 14px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .grid-section .table-scroll { box-shadow: none; }
 
   /* Collapsible per-grade groups in the Students list */
   details.grade-group { background: white; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
@@ -113,14 +129,17 @@
   @media print {
     @page { size: landscape; margin: 10mm; }
     header, .chips, .row select, .row input, button, .back-link, footer, #dailyEmailStatus, .no-print { display: none !important; }
-    .print-only { display: block !important; margin-bottom: 16px; }
-    .print-school { color: var(--gold); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
-    #printHeaderTitle { margin: 4px 0 2px; color: var(--teal); }
+    .print-only { display: block !important; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid var(--gold); }
+    .print-school { color: #8a6d10; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; margin: 0; font-weight: 700; }
+    #printHeaderTitle { margin: 4px 0 2px; color: var(--teal); font-size: 20px; }
     #printHeaderSubtitle { margin: 0; color: #555; font-size: 13px; }
     table { font-size: 11px; }
-    .table-scroll { overflow: visible !important; }
+    .table-scroll { overflow: visible !important; box-shadow: none !important; }
     body { background: white; }
     main { max-width: none !important; padding: 0 !important; }
+    .grid-section { box-shadow: none !important; border: none; padding: 0; margin-bottom: 18px; page-break-inside: avoid; }
+    .grid-section + .grid-section { page-break-before: always; padding-top: 4mm; }
+    .grade-header { font-size: 14px; }
   }
 
   @media (min-width: 860px) {
@@ -144,9 +163,10 @@
 <main>
 
   <div id="printHeader" class="print-only">
-    <p class="print-school">Um Al-Qura Islamic School</p>
+    <p class="print-school">Um Al-Qura Islamic School — 265 Yorkland Blvd, North York, ON</p>
     <h2 id="printHeaderTitle"></h2>
     <p id="printHeaderSubtitle"></p>
+    <p id="printHeaderGenerated" style="margin:4px 0 0; color:#999; font-size:11px;"></p>
   </div>
 
   <!-- LANDING -->
@@ -289,9 +309,12 @@
         <select id="weeklyGradeSelect" style="flex:1;" onchange="onWeeklyGradeChange()"></select>
         <select id="weeklyWeekSelect" style="flex:1;" onchange="renderWeeklyGrid()"></select>
       </div>
-      <p class="subtle">P = Present · A = Absent · L = Late · E = Excused. Blank = no record for that day.</p>
-      <div class="row"><button class="ghost-btn" onclick="printWeeklyGrid()">🖨️ Print / Save as PDF</button></div>
-      <div class="table-scroll" id="weeklyGridWrap"></div>
+      <p class="subtle">P = Present · A = Absent · L = Late · E = Excused. Blank = no record for that day. Pick "Whole School" to report on every grade at once.</p>
+      <div class="row">
+        <button class="ghost-btn" onclick="printWeeklyGrid()">🖨️ Print / Save as PDF</button>
+        <button class="gold-btn" onclick="downloadWeeklyExcel()">⬇️ Download Excel</button>
+      </div>
+      <div id="weeklyGridWrap"></div>
     </div>
 
     <!-- MONTHLY GRID -->
@@ -300,9 +323,12 @@
         <select id="monthlyGradeSelect" style="flex:1;" onchange="onMonthlyGradeChange()"></select>
         <select id="monthlyMonthSelect" style="flex:1;" onchange="renderMonthlyGrid()"></select>
       </div>
-      <p class="subtle">P = Present · A = Absent · L = Late · E = Excused. Blank = no record for that day.</p>
-      <div class="row"><button class="ghost-btn" onclick="printMonthlyGrid()">🖨️ Print / Save as PDF</button></div>
-      <div class="table-scroll" id="monthlyGridWrap"></div>
+      <p class="subtle">P = Present · A = Absent · L = Late · E = Excused. Blank = no record for that day. Pick "Whole School" to report on every grade at once.</p>
+      <div class="row">
+        <button class="ghost-btn" onclick="printMonthlyGrid()">🖨️ Print / Save as PDF</button>
+        <button class="gold-btn" onclick="downloadMonthlyExcel()">⬇️ Download Excel</button>
+      </div>
+      <div id="monthlyGridWrap"></div>
     </div>
 
     <a class="back-link" href="#" onclick="goTo('landing')">← Switch user</a>
@@ -317,7 +343,7 @@
 </footer>
 
 <script>
-const APP_URL = "https://script.google.com/macros/s/AKfycbyGLzhLVE6WXz3GiXdc-vYbrlWogFQ41nppLrcTIlsnpsAcXlwcXtoNSNZqa-g1fL0ROA/exec";
+const APP_URL = "https://script.google.com/macros/s/AKfycbzDW-EaH27nU5XwF1M7q7Re-lI7GVx3iuR7roGC_0Ja_KwXU9Wm-OyHvr8PKUqGoa5hOg/exec";
 const ADMIN_PIN = "2580";   // ⚠️ change before sharing the link
 // Note: teachers now enter directly with no PIN, per request. The admin PIN
 // still protects student records, contact info, and bulk email sending.
@@ -574,7 +600,7 @@ function setAdminView(view, btnEl) {
 }
 
 function syncAdminGrade(newGrade) {
-  if (!newGrade || newGrade === 'all') return;
+  if (!newGrade || newGrade === 'all' || newGrade === '__all__') return;
   adminSelectedGrade = newGrade;
   localStorage.setItem('uaq_adminGrade', newGrade);
   ['weeklyGradeSelect', 'monthlyGradeSelect', 'dailyReportGrade'].forEach(id => {
@@ -595,8 +621,8 @@ function refreshAllAdminSelects() {
   document.getElementById('newStudentGrade').innerHTML = opts || '<option value="">Add a grade first</option>';
   document.getElementById('manageGradeFilter').innerHTML = '<option value="all">All grades</option>' + opts;
   document.getElementById('dailyReportGrade').innerHTML = '<option value="all">All grades</option>' + opts;
-  document.getElementById('weeklyGradeSelect').innerHTML = opts || '<option value="">Add a grade first</option>';
-  document.getElementById('monthlyGradeSelect').innerHTML = opts || '<option value="">Add a grade first</option>';
+  document.getElementById('weeklyGradeSelect').innerHTML = opts ? '<option value="__all__">🏫 Whole School</option>' + opts : '<option value="">Add a grade first</option>';
+  document.getElementById('monthlyGradeSelect').innerHTML = opts ? '<option value="__all__">🏫 Whole School</option>' + opts : '<option value="">Add a grade first</option>';
   document.getElementById('importTargetGrade').innerHTML = (opts || '<option value="">Add a grade first</option>') +
     '<option value="">— use the file\'s own Grade column —</option>';
 
@@ -1074,6 +1100,63 @@ function buildGridTable_(roster, dates, labelFn) {
   '</table>';
 }
 
+function gradeAttendanceCounts_(gradeName, dates) {
+  const roster = state.students.filter(s => s.grade === gradeName);
+  const counts = { present: 0, absent: 0, late: 0, excused: 0 };
+  roster.forEach(s => dates.forEach(d => {
+    const rec = attendanceFor(isoDate_(d), s.id);
+    if (rec) counts[rec.status] = (counts[rec.status] || 0) + 1;
+  }));
+  return counts;
+}
+
+function buildSchoolSummaryHtml_(dates) {
+  const names = gradeNamesInOrder();
+  const rows = names.map(name => {
+    const counts = gradeAttendanceCounts_(name, dates);
+    const studentCount = state.students.filter(s => s.grade === name).length;
+    return { name, studentCount, ...counts };
+  });
+  const grand = rows.reduce((acc, r) => {
+    acc.studentCount += r.studentCount; acc.present += r.present; acc.absent += r.absent; acc.late += r.late; acc.excused += r.excused;
+    return acc;
+  }, { studentCount: 0, present: 0, absent: 0, late: 0, excused: 0 });
+
+  const trs = rows.map(r =>
+    '<tr><td>' + esc(r.name) + '</td><td>' + r.studentCount + '</td><td>' + r.present + '</td><td>' + r.absent + '</td><td>' + r.late + '</td><td>' + r.excused + '</td></tr>'
+  ).join('');
+
+  return '<div class="table-scroll"><table>' +
+    '<tr><th>Grade</th><th>Students</th><th>P</th><th>A</th><th>L</th><th>E</th></tr>' +
+    trs +
+    '<tr style="font-weight:700;background:#EAF3F0;"><td>Whole School</td><td>' + grand.studentCount + '</td><td>' + grand.present + '</td><td>' + grand.absent + '</td><td>' + grand.late + '</td><td>' + grand.excused + '</td></tr>' +
+  '</table></div>';
+}
+
+// Renders either one grade's grid, or — when selectedGrade is "__all__" — a
+// school-wide summary table followed by every grade's grid stacked below it
+// (each in its own labelled, individually scrollable/printable section).
+function renderGridInto_(wrapId, dates, labelFn, selectedGrade) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+
+  if (selectedGrade === '__all__') {
+    const names = gradeNamesInOrder();
+    if (!names.length) { wrap.innerHTML = '<p class="subtle">Add a grade first.</p>'; return; }
+    let html = '<div class="grid-section"><p class="grade-header">School Summary</p>' + buildSchoolSummaryHtml_(dates) + '</div>';
+    names.forEach(name => {
+      const roster = sortStudents(state.students.filter(s => s.grade === name));
+      html += '<div class="grid-section"><p class="grade-header">' + esc(name) + '</p><div class="table-scroll">' + buildGridTable_(roster, dates, labelFn) + '</div></div>';
+    });
+    wrap.innerHTML = html;
+    return;
+  }
+
+  if (!selectedGrade) { wrap.innerHTML = '<p class="subtle">Add a grade first.</p>'; return; }
+  const roster = sortStudents(state.students.filter(s => s.grade === selectedGrade));
+  wrap.innerHTML = '<div class="grid-section"><div class="table-scroll">' + buildGridTable_(roster, dates, labelFn) + '</div></div>';
+}
+
 // ---- Weekly grid ----
 function sundayOf_(d) {
   const copy = new Date(d);
@@ -1101,12 +1184,7 @@ function populateWeeklySelect() {
   }).join('');
 }
 
-function renderWeeklyGrid() {
-  const grade = document.getElementById('weeklyGradeSelect').value;
-  const weekStartIso = document.getElementById('weeklyWeekSelect').value;
-  const wrap = document.getElementById('weeklyGridWrap');
-  if (!grade || !weekStartIso) { wrap.innerHTML = '<p class="subtle">Add a grade first.</p>'; return; }
-
+function weeklyDatesFor_(weekStartIso) {
   const start = new Date(weekStartIso + "T00:00:00");
   const dates = [];
   for (let i = 0; i < 7; i++) {
@@ -1114,59 +1192,68 @@ function renderWeeklyGrid() {
     d.setDate(d.getDate() + i);
     dates.push(d);
   }
+  return dates;
+}
+function weeklyLabelFn_(d) {
+  const dow = d.getDay();
+  return { label: d.toLocaleDateString(undefined, { weekday: 'short' }) + ' ' + d.getDate(), weekend: dow === 0 || dow === 6 };
+}
 
-  const roster = sortStudents(state.students.filter(s => s.grade === grade));
-  wrap.innerHTML = buildGridTable_(roster, dates, d => {
-    const dow = d.getDay();
-    return { label: d.toLocaleDateString(undefined, { weekday: 'short' }) + ' ' + d.getDate(), weekend: dow === 0 || dow === 6 };
-  });
+function renderWeeklyGrid() {
+  const grade = document.getElementById('weeklyGradeSelect').value;
+  const weekStartIso = document.getElementById('weeklyWeekSelect').value;
+  if (!weekStartIso) { document.getElementById('weeklyGridWrap').innerHTML = '<p class="subtle">Add a grade first.</p>'; return; }
+  renderGridInto_('weeklyGridWrap', weeklyDatesFor_(weekStartIso), weeklyLabelFn_, grade);
 }
 
 // ---- Monthly grid ----
-function renderMonthlyGrid() {
-  const grade = document.getElementById('monthlyGradeSelect').value;
-  const month = document.getElementById('monthlyMonthSelect').value;
-  const wrap = document.getElementById('monthlyGridWrap');
-  if (!grade || !month) { wrap.innerHTML = '<p class="subtle">Add a grade first.</p>'; return; }
-
+function monthlyDatesFor_(month) {
   const parts = month.split('-').map(Number);
   const year = parts[0], mo = parts[1];
   const numDays = daysInMonth_(year, mo);
   const dates = [];
   for (let d = 1; d <= numDays; d++) dates.push(new Date(year, mo - 1, d));
+  return dates;
+}
+function monthlyLabelFn_(d) { return { label: String(d.getDate()), weekend: d.getDay() === 0 || d.getDay() === 6 }; }
 
-  const roster = sortStudents(state.students.filter(s => s.grade === grade));
-  wrap.innerHTML = buildGridTable_(roster, dates, d => ({ label: String(d.getDate()), weekend: d.getDay() === 0 || d.getDay() === 6 }));
+function renderMonthlyGrid() {
+  const grade = document.getElementById('monthlyGradeSelect').value;
+  const month = document.getElementById('monthlyMonthSelect').value;
+  if (!month) { document.getElementById('monthlyGridWrap').innerHTML = '<p class="subtle">Add a grade first.</p>'; return; }
+  renderGridInto_('monthlyGridWrap', monthlyDatesFor_(month), monthlyLabelFn_, grade);
 }
 
 // ---- Print / PDF ----
 function setPrintHeader_(title, subtitle) {
   document.getElementById('printHeaderTitle').innerText = title;
   document.getElementById('printHeaderSubtitle').innerText = subtitle;
+  const now = new Date();
+  document.getElementById('printHeaderGenerated').innerText = 'Generated ' + now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) + ' at ' + now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
 // Wide grids (a whole month of columns, or every student in a grade) were
-// getting cut off at the edge of the printed/PDF page. This shrinks the
-// table to fit the landscape page width right before printing, then
-// restores it afterwards so the on-screen view is unaffected.
+// getting cut off at the edge of the printed/PDF page. This shrinks each
+// table in the wrap to fit the landscape page width right before printing
+// (a whole-school report has one table per grade plus the summary table),
+// then restores them afterwards so the on-screen view is unaffected.
 function fitTableToPrintPage_(wrapId) {
   const wrap = document.getElementById(wrapId);
   if (!wrap) return;
-  const table = wrap.querySelector('table');
-  if (!table) return;
-  wrap.style.zoom = '';
   const availablePx = 1040; // landscape Letter/A4 minus ~10mm margins, at 96dpi
-  const naturalWidth = table.scrollWidth;
-  if (naturalWidth > availablePx) {
-    wrap.style.zoom = Math.max(0.35, availablePx / naturalWidth);
-  }
+  wrap.querySelectorAll('.table-scroll').forEach(scroller => {
+    scroller.style.zoom = '';
+    const table = scroller.querySelector('table');
+    if (!table) return;
+    const naturalWidth = table.scrollWidth;
+    if (naturalWidth > availablePx) {
+      scroller.style.zoom = Math.max(0.35, availablePx / naturalWidth);
+    }
+  });
 }
 
 function resetPrintZoom_() {
-  ['dailyReportTableWrap', 'weeklyGridWrap', 'monthlyGridWrap'].forEach(id => {
-    const wrap = document.getElementById(id);
-    if (wrap) wrap.style.zoom = '';
-  });
+  document.querySelectorAll('#dailyReportTableWrap .table-scroll, #weeklyGridWrap .table-scroll, #monthlyGridWrap .table-scroll, #dailyReportTableWrap').forEach(el => el.style.zoom = '');
 }
 window.addEventListener('afterprint', resetPrintZoom_);
 
@@ -1179,19 +1266,101 @@ function printDailyReport() {
 }
 
 function printWeeklyGrid() {
-  const grade = document.getElementById('weeklyGradeSelect').value;
+  const gradeVal = document.getElementById('weeklyGradeSelect').value;
   const opt = document.getElementById('weeklyWeekSelect').selectedOptions[0];
-  setPrintHeader_('Weekly Attendance Report', grade + ' — Week of ' + (opt ? opt.text : ''));
+  setPrintHeader_('Weekly Attendance Report', (gradeVal === '__all__' ? 'Whole School' : gradeVal) + ' — Week of ' + (opt ? opt.text : ''));
   fitTableToPrintPage_('weeklyGridWrap');
   window.print();
 }
 
 function printMonthlyGrid() {
-  const grade = document.getElementById('monthlyGradeSelect').value;
+  const gradeVal = document.getElementById('monthlyGradeSelect').value;
   const opt = document.getElementById('monthlyMonthSelect').selectedOptions[0];
-  setPrintHeader_('Monthly Attendance Report', grade + ' — ' + (opt ? opt.text : ''));
+  setPrintHeader_('Monthly Attendance Report', (gradeVal === '__all__' ? 'Whole School' : gradeVal) + ' — ' + (opt ? opt.text : ''));
   fitTableToPrintPage_('monthlyGridWrap');
   window.print();
+}
+
+// ---- Excel export (per grade, or every grade as its own worksheet) ----
+function safeSheetName_(name) {
+  return String(name).replace(/[\\\/\?\*\[\]:]/g, ' ').trim().slice(0, 31) || 'Sheet';
+}
+
+function buildGradeAOA_(gradeName, dates, labelFn) {
+  const roster = sortStudents(state.students.filter(s => s.grade === gradeName));
+  const statusLetter = { present: 'P', absent: 'A', late: 'L', excused: 'E' };
+  const header = ['Student'].concat(dates.map(d => labelFn(d).label)).concat(['Present', 'Absent', 'Late', 'Excused']);
+  const rows = roster.map(s => {
+    const counts = { present: 0, absent: 0, late: 0, excused: 0 };
+    const cells = dates.map(d => {
+      const rec = attendanceFor(isoDate_(d), s.id);
+      if (rec) counts[rec.status] = (counts[rec.status] || 0) + 1;
+      return rec ? statusLetter[rec.status] : '';
+    });
+    return [fullName(s)].concat(cells).concat([counts.present, counts.absent, counts.late, counts.excused]);
+  });
+  return [header].concat(rows);
+}
+
+function buildSchoolSummaryAOA_(dates) {
+  const names = gradeNamesInOrder();
+  const header = ['Grade', 'Students', 'Present', 'Absent', 'Late', 'Excused'];
+  const rows = names.map(name => {
+    const counts = gradeAttendanceCounts_(name, dates);
+    const studentCount = state.students.filter(s => s.grade === name).length;
+    return [name, studentCount, counts.present, counts.absent, counts.late, counts.excused];
+  });
+  const grand = rows.reduce((acc, r) => [acc[0] + r[1], acc[1] + r[2], acc[2] + r[3], acc[3] + r[4], acc[4] + r[5]], [0, 0, 0, 0, 0]);
+  rows.push(['Whole School Total', grand[0], grand[1], grand[2], grand[3], grand[4]]);
+  return [header].concat(rows);
+}
+
+function downloadWorkbook_(sheets, filename) {
+  const wb = XLSX.utils.book_new();
+  const usedNames = new Set();
+  sheets.forEach(({ name, aoa }) => {
+    let sheetName = safeSheetName_(name);
+    let n = 2;
+    while (usedNames.has(sheetName)) { sheetName = safeSheetName_(name).slice(0, 28) + '-' + n; n++; }
+    usedNames.add(sheetName);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+  XLSX.writeFile(wb, filename);
+}
+
+function downloadWeeklyExcel() {
+  const grade = document.getElementById('weeklyGradeSelect').value;
+  const weekStartIso = document.getElementById('weeklyWeekSelect').value;
+  if (!weekStartIso) { alert('Pick a week first.'); return; }
+  const dates = weeklyDatesFor_(weekStartIso);
+
+  if (grade === '__all__') {
+    const sheets = [{ name: 'School Summary', aoa: buildSchoolSummaryAOA_(dates) }]
+      .concat(gradeNamesInOrder().map(name => ({ name, aoa: buildGradeAOA_(name, dates, weeklyLabelFn_) })));
+    downloadWorkbook_(sheets, 'UAQ-weekly-attendance-whole-school-' + weekStartIso + '.xlsx');
+  } else {
+    if (!grade) { alert('Add a grade first.'); return; }
+    downloadWorkbook_([{ name: grade, aoa: buildGradeAOA_(grade, dates, weeklyLabelFn_) }],
+      'UAQ-weekly-attendance-' + grade.replace(/\s+/g, '-') + '-' + weekStartIso + '.xlsx');
+  }
+}
+
+function downloadMonthlyExcel() {
+  const grade = document.getElementById('monthlyGradeSelect').value;
+  const month = document.getElementById('monthlyMonthSelect').value;
+  if (!month) { alert('Pick a month first.'); return; }
+  const dates = monthlyDatesFor_(month);
+
+  if (grade === '__all__') {
+    const sheets = [{ name: 'School Summary', aoa: buildSchoolSummaryAOA_(dates) }]
+      .concat(gradeNamesInOrder().map(name => ({ name, aoa: buildGradeAOA_(name, dates, monthlyLabelFn_) })));
+    downloadWorkbook_(sheets, 'UAQ-monthly-attendance-whole-school-' + month + '.xlsx');
+  } else {
+    if (!grade) { alert('Add a grade first.'); return; }
+    downloadWorkbook_([{ name: grade, aoa: buildGradeAOA_(grade, dates, monthlyLabelFn_) }],
+      'UAQ-monthly-attendance-' + grade.replace(/\s+/g, '-') + '-' + month + '.xlsx');
+  }
 }
 
 document.getElementById('adminPinInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryAdminUnlock(); });
