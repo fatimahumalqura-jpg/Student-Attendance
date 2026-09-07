@@ -224,7 +224,8 @@
       </div>
       <div id="gradesList" class="grade-chip-grid"></div>
 
-      <p class="section-title">Add a single student</p>
+      <p class="section-title" id="studentFormTitle">Add a single student</p>
+      <p class="subtle hidden" id="editingBanner">Editing an existing student — <a href="#" onclick="cancelEditStudent(); return false;">cancel edit</a></p>
       <div class="row">
         <select id="newStudentGrade" style="flex:1;"></select>
       </div>
@@ -248,8 +249,10 @@
         <textarea id="newStudentComments" placeholder="Comments"></textarea>
       </div>
       <div class="row">
-        <button class="icon-btn" onclick="addStudent()">Add student</button>
+        <button class="icon-btn" id="studentFormSubmitBtn" onclick="saveStudentForm()">Add student</button>
+        <button class="ghost-btn hidden" id="cancelEditBtn" onclick="cancelEditStudent()">Cancel</button>
       </div>
+      <p class="subtle" id="addStudentStatus"></p>
 
       <p class="section-title">Bulk import from Excel / CSV</p>
       <div class="panel-box">
@@ -261,6 +264,7 @@
         <div class="row">
           <button class="ghost-btn" onclick="downloadImportTemplate()">⬇️ Download Excel template</button>
         </div>
+        <label class="subtle" for="importTargetGrade" style="display:block; margin-bottom:4px; font-weight:600;">Import into:</label>
         <div class="row">
           <select id="importTargetGrade" style="flex:1;"></select>
           <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" onchange="handleImportFile(event)" />
@@ -343,7 +347,7 @@
 </footer>
 
 <script>
-const APP_URL = "https://script.google.com/macros/s/AKfycbyH9-5BGGHNd7rTWunWd1el6eZ5xCoYHedsnfR1ZsmpU7o6GZZjVjvjvwbhVbpwN9BSSg/exec";
+const APP_URL = "https://script.google.com/macros/s/AKfycbzyc11oKgioERsW-nTPFU8WnQxGRIEuj25lkJAvjkigwMC63kHpwd3HRSLJlWkdFo7HuA/exec";
 const ADMIN_PIN = "2580";   // ⚠️ change before sharing the link
 // Note: teachers now enter directly with no PIN, per request. The admin PIN
 // still protects student records, contact info, and bulk email sending.
@@ -623,8 +627,18 @@ function refreshAllAdminSelects() {
   document.getElementById('dailyReportGrade').innerHTML = '<option value="all">All grades</option>' + opts;
   document.getElementById('weeklyGradeSelect').innerHTML = opts ? '<option value="__all__">🏫 Whole School</option>' + opts : '<option value="">Add a grade first</option>';
   document.getElementById('monthlyGradeSelect').innerHTML = opts ? '<option value="__all__">🏫 Whole School</option>' + opts : '<option value="">Add a grade first</option>';
-  document.getElementById('importTargetGrade').innerHTML = (opts || '<option value="">Add a grade first</option>') +
-    '<option value="">— use the file\'s own Grade column —</option>';
+
+  // "Auto-detect from file" is listed FIRST (and is the empty-string default)
+  // so re-rendering this select (e.g. after an import finishes) never
+  // silently switches the admin onto a specific grade without them
+  // choosing it — that was causing "no Grade column" errors even when a
+  // grade looked selected, because it hadn't actually been picked.
+  const importGradeSel = document.getElementById('importTargetGrade');
+  const previousImportTarget = importGradeSel.value;
+  importGradeSel.innerHTML = '<option value="">— auto-detect from the file\'s own Grade column —</option>' + opts;
+  if (previousImportTarget && names.indexOf(previousImportTarget) > -1) {
+    importGradeSel.value = previousImportTarget;
+  }
 
   if (!adminSelectedGrade || names.indexOf(adminSelectedGrade) === -1) {
     adminSelectedGrade = names[0] || null;
@@ -694,15 +708,65 @@ async function deleteGrade(name) {
   }
 }
 
-// ---- Manage: students ----
-async function addStudent() {
+// ---- Manage: students (add / edit share one form) ----
+let editingStudentId = null;
+let editingStudentOriginalGrade = null;
+
+const STUDENT_FORM_FIELD_IDS = ['newStudentName', 'newStudentOen', 'newStudentDob', 'newStudentAddress', 'newStudentPhone', 'newStudentMother', 'newStudentFather', 'newStudentEmail', 'newStudentComments'];
+
+function clearStudentForm_() {
+  STUDENT_FORM_FIELD_IDS.forEach(id => document.getElementById(id).value = '');
+}
+
+function startEditStudent(grade, id) {
+  const s = state.students.find(st => st.id === id);
+  if (!s) return;
+  editingStudentId = id;
+  editingStudentOriginalGrade = grade;
+
+  document.getElementById('newStudentGrade').value = s.grade;
+  document.getElementById('newStudentName').value = s.name || '';
+  document.getElementById('newStudentOen').value = s.oen || '';
+  document.getElementById('newStudentDob').value = s.dob || '';
+  document.getElementById('newStudentAddress').value = s.address || '';
+  document.getElementById('newStudentPhone').value = s.phone || '';
+  document.getElementById('newStudentMother').value = s.mother || '';
+  document.getElementById('newStudentFather').value = s.father || '';
+  document.getElementById('newStudentEmail').value = s.email || '';
+  document.getElementById('newStudentComments').value = s.comments || '';
+
+  document.getElementById('studentFormTitle').innerText = 'Edit student';
+  document.getElementById('editingBanner').classList.remove('hidden');
+  document.getElementById('studentFormSubmitBtn').innerText = 'Save changes';
+  document.getElementById('cancelEditBtn').classList.remove('hidden');
+  document.getElementById('addStudentStatus').innerText = '';
+  document.getElementById('studentFormTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEditStudent() {
+  editingStudentId = null;
+  editingStudentOriginalGrade = null;
+  clearStudentForm_();
+  document.getElementById('studentFormTitle').innerText = 'Add a single student';
+  document.getElementById('editingBanner').classList.add('hidden');
+  document.getElementById('studentFormSubmitBtn').innerText = 'Add student';
+  document.getElementById('cancelEditBtn').classList.add('hidden');
+  document.getElementById('addStudentStatus').innerText = '';
+}
+
+async function saveStudentForm() {
   const grade = document.getElementById('newStudentGrade').value;
   const name = document.getElementById('newStudentName').value.trim();
+  const statusEl = document.getElementById('addStudentStatus');
   if (!grade || !name) { alert('Grade and student name are required.'); return; }
 
+  const isEditing = !!editingStudentId;
+  const existing = isEditing ? state.students.find(st => st.id === editingStudentId) : null;
+
   const s = {
-    id: uid('s'), grade, name,
-    no: state.students.filter(st => st.grade === grade).length + 1,
+    id: isEditing ? editingStudentId : uid('s'),
+    grade, name,
+    no: isEditing && existing ? existing.no : (state.students.filter(st => st.grade === grade).length + 1),
     oen: document.getElementById('newStudentOen').value.trim(),
     dob: document.getElementById('newStudentDob').value,
     address: document.getElementById('newStudentAddress').value.trim(),
@@ -712,16 +776,36 @@ async function addStudent() {
     email: document.getElementById('newStudentEmail').value.trim(),
     comments: document.getElementById('newStudentComments').value.trim()
   };
-  state.students.push(s);
 
-  ['newStudentName', 'newStudentOen', 'newStudentDob', 'newStudentAddress', 'newStudentPhone', 'newStudentMother', 'newStudentFather', 'newStudentEmail', 'newStudentComments']
-    .forEach(id => document.getElementById(id).value = '');
+  if (isEditing) {
+    const idx = state.students.findIndex(st => st.id === editingStudentId);
+    if (idx > -1) state.students[idx] = s; else state.students.push(s);
+  } else {
+    state.students.push(s);
+  }
+
+  const wasEditing = isEditing;
+  const originalGrade = editingStudentOriginalGrade;
+  if (isEditing) cancelEditStudent(); else clearStudentForm_();
 
   renderStudentsList();
   renderGradesList();
+  statusEl.style.color = '';
+  statusEl.innerText = 'Saving…';
   try {
-    await post('addStudent', s);
+    const result = wasEditing
+      ? await post('updateStudent', { ...s, oldGrade: originalGrade })
+      : await post('addStudent', s);
+    statusEl.innerText = (result && result.ok === false)
+      ? ('Not saved: ' + (result.error || 'unknown error'))
+      : (wasEditing ? ('✓ ' + name + ' updated.') : ('✓ ' + name + ' added to ' + grade + '.'));
+    if (result && result.ok === false) statusEl.style.color = 'var(--red)';
+    if (result && result.ok !== false) await loadState();
+    renderStudentsList();
+    renderGradesList();
   } catch (err) {
+    statusEl.innerText = "Not saved — couldn't reach the server: " + err.message;
+    statusEl.style.color = 'var(--red)';
     alert("Couldn't save this student: " + err.message);
   }
 }
@@ -759,7 +843,10 @@ function renderStudentsList() {
       return '<div class="card">' +
         '<div class="card-row">' +
           '<p class="name">' + esc(fullName(s)) + '</p>' +
-          '<button class="danger-btn" onclick="deleteStudent(\'' + s.grade.replace(/'/g, "\\'") + '\',\'' + s.id + '\',\'' + esc(fullName(s)).replace(/'/g, "\\'") + '\')">🗑 Remove</button>' +
+          '<div class="roster-btns">' +
+            '<button class="ghost-btn" onclick="startEditStudent(\'' + s.grade.replace(/'/g, "\\'") + '\',\'' + s.id + '\')">✏️ Edit</button>' +
+            '<button class="danger-btn" onclick="deleteStudent(\'' + s.grade.replace(/'/g, "\\'") + '\',\'' + s.id + '\',\'' + esc(fullName(s)).replace(/'/g, "\\'") + '\')">🗑 Remove</button>' +
+          '</div>' +
         '</div>' +
         (meta ? '<p class="meta">' + esc(meta) + '</p>' : '') +
         (s.comments ? '<p class="meta">Comments: ' + esc(s.comments) + '</p>' : '') +
@@ -791,6 +878,7 @@ function toggleAllStudentGroups(open) {
 
 async function deleteStudent(grade, id, name) {
   if (!confirm("Remove " + name + " from the roster? Their past attendance history stays in the log.")) return;
+  if (id === editingStudentId) cancelEditStudent();
   state.students = state.students.filter(s => s.id !== id);
   refreshAllAdminSelects();
   renderStudentsList();
@@ -858,14 +946,18 @@ function parseImportRows_(rows) {
   headerRow.forEach((h, i) => { if (IMPORT_HEADER_MAP_[h]) colIndex[IMPORT_HEADER_MAP_[h]] = i; });
 
   if (colIndex.name == null) {
-    wrap.innerHTML = '<p class="import-warning">Couldn\'t find a Student Name column. Use the downloaded template\'s headers.</p>';
+    wrap.innerHTML = '<p class="import-warning">Couldn\'t find a Student Name column. Columns detected in your file: ' +
+      esc(rows[0].map(h => String(h || '').trim()).filter(Boolean).join(', ') || '(none)') +
+      '. Use the downloaded template\'s headers.</p>';
     pendingImport = null;
     return;
   }
 
   const targetGrade = document.getElementById('importTargetGrade').value;
   if (colIndex.grade == null && !targetGrade) {
-    wrap.innerHTML = '<p class="import-warning">This file has no Grade column — pick a target grade above, or add a Grade column to the file.</p>';
+    wrap.innerHTML = '<p class="import-warning">This file has no Grade column, and no target grade is selected above. ' +
+      'Columns detected in your file: ' + esc(rows[0].map(h => String(h || '').trim()).filter(Boolean).join(', ') || '(none)') +
+      '. Pick a grade from the "Import into" dropdown above, or add a column named "Grade" to the file.</p>';
     pendingImport = null;
     return;
   }
