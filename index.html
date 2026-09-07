@@ -4,15 +4,16 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>Student Attendance — Um Al-Qura Islamic School</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root { --teal: #1F4B43; --gold: #C9A227; --cream: #F7F5F0; --red: #B3413B; --gray: #8A8A8A; }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--cream); color: #222; }
   header { background: var(--teal); color: white; padding: 22px 18px; }
-  .header-inner { display: flex; align-items: center; gap: 14px; }
+  .header-inner { display: flex; align-items: center; gap: 14px; max-width: 1200px; margin: 0 auto; }
   header .eyebrow { color: var(--gold); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
   header h1 { margin: 2px 0 0; font-size: 20px; font-weight: 600; }
-  main { padding: 18px; max-width: 720px; margin: 0 auto; }
+  main { padding: 18px; max-width: 1200px; margin: 0 auto; }
   .hidden { display: none; }
 
   .landing { max-width: 340px; margin: 50px auto; text-align: center; }
@@ -27,8 +28,9 @@
   .back-link { display: block; text-align: center; margin-top: 14px; color: #999; font-size: 12px; }
 
   .row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-  input[type=text], input[type=email], input[type=tel], input[type=date] { flex: 1; min-width: 120px; padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; }
+  input[type=text], input[type=email], input[type=tel], input[type=date], input[type=file] { flex: 1; min-width: 120px; padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; background: white; }
   select { padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; background: white; }
+  textarea { flex: 1; min-width: 120px; padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; font-family: inherit; resize: vertical; min-height: 44px; }
   button.icon-btn { border: none; border-radius: 10px; padding: 0 14px; color: white; background: var(--teal); cursor: pointer; font-size: 14px; }
   button.gold-btn { border: none; border-radius: 10px; padding: 10px 14px; color: white; background: var(--gold); cursor: pointer; font-size: 13px; font-weight: 600; }
   button.danger-btn { border: none; border-radius: 8px; padding: 8px 10px; background: #F7E9E8; color: var(--red); cursor: pointer; font-size: 13px; white-space: nowrap; }
@@ -36,15 +38,22 @@
 
   .card { background: white; border-radius: 14px; padding: 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
   .card .name { font-weight: 600; color: var(--teal); font-size: 14px; margin: 0; }
-  .card .meta { font-size: 12px; color: #888; margin: 6px 0 0; }
+  .card .meta { font-size: 12px; color: #888; margin: 6px 0 0; line-height: 1.6; }
   .card-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 
   .section-title { font-size: 13px; color: #888; font-weight: 600; margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
   .subtle { color: #999; font-size: 13px; }
+  .panel-box { background: white; border: 1px dashed #ddd; border-radius: 14px; padding: 16px; margin-bottom: 10px; }
 
   .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; }
   .chip { padding: 7px 14px; border-radius: 999px; font-size: 13px; white-space: nowrap; border: 1px solid #ddd; background: white; color: var(--teal); cursor: pointer; }
   .chip.active { background: var(--teal); color: white; border-color: var(--teal); }
+
+  /* compact grade chip grid — one tile per grade sheet */
+  .grade-chip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 8px; }
+  .grade-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: white; border-radius: 10px; padding: 8px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .grade-chip .name { font-weight: 600; color: var(--teal); font-size: 13px; margin: 0; }
+  .grade-chip button.danger-btn { padding: 5px 8px; font-size: 11px; }
 
   table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; font-size: 13px; }
   th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
@@ -86,9 +95,23 @@
 
   .grade-header { font-weight: 700; color: var(--teal); font-size: 13px; margin: 14px 0 6px; }
 
+  /* Collapsible per-grade groups in the Students list */
+  details.grade-group { background: white; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
+  details.grade-group summary { list-style: none; cursor: pointer; padding: 12px 14px; font-weight: 700; color: var(--teal); font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+  details.grade-group summary::-webkit-details-marker { display: none; }
+  details.grade-group summary .count { color: #999; font-weight: 500; font-size: 12px; }
+  details.grade-group summary::after { content: '▸'; color: #bbb; font-size: 12px; transition: transform 0.15s; margin-left: 8px; }
+  details.grade-group[open] summary::after { transform: rotate(90deg); }
+  details.grade-group .group-body { padding: 0 14px 12px; }
+  details.grade-group .card { box-shadow: none; border: 1px solid #f0f0f0; }
+
+  .import-preview-table { max-height: 260px; overflow-y: auto; border: 1px solid #eee; border-radius: 10px; margin-top: 8px; }
+  .import-preview-table table { font-size: 12px; }
+  .import-warning { color: var(--red); font-size: 12px; margin-top: 6px; }
+
   .print-only { display: none; }
   @media print {
-    @page { size: landscape; margin: 12mm; }
+    @page { size: landscape; margin: 10mm; }
     header, .chips, .row select, .row input, button, .back-link, footer, #dailyEmailStatus, .no-print { display: none !important; }
     .print-only { display: block !important; margin-bottom: 16px; }
     .print-school { color: var(--gold); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
@@ -97,6 +120,13 @@
     table { font-size: 11px; }
     .table-scroll { overflow: visible !important; }
     body { background: white; }
+    main { max-width: none !important; padding: 0 !important; }
+  }
+
+  @media (min-width: 860px) {
+    .row.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .row.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .grid-cell { width: 30px; height: 30px; font-size: 11px; }
   }
 </style>
 </head>
@@ -167,34 +197,63 @@
 
     <!-- MANAGE -->
     <div id="adminManage">
-      <p class="section-title">Add grade</p>
+      <p class="section-title">Grades (each one is its own sheet tab)</p>
       <div class="row">
         <input type="text" id="newGradeName" placeholder="e.g. Grade 3" />
-        <button class="icon-btn" onclick="addGrade()">Add</button>
+        <button class="icon-btn" onclick="addGrade()">Add grade</button>
       </div>
-      <div id="gradesList"></div>
+      <div id="gradesList" class="grade-chip-grid"></div>
 
-      <p class="section-title">Add student</p>
-      <div class="row">
-        <input type="text" id="newStudentFirst" placeholder="First name" />
-        <input type="text" id="newStudentLast" placeholder="Last name" />
-      </div>
+      <p class="section-title">Add a single student</p>
       <div class="row">
         <select id="newStudentGrade" style="flex:1;"></select>
       </div>
-      <div class="row">
-        <input type="text" id="newStudentParentName" placeholder="Parent/guardian name" />
+      <div class="row two-col">
+        <input type="text" id="newStudentName" placeholder="Student name" />
+        <input type="text" id="newStudentOen" placeholder="OEN" />
+      </div>
+      <div class="row two-col">
+        <input type="date" id="newStudentDob" placeholder="DOB" />
+        <input type="text" id="newStudentAddress" placeholder="Address" />
+      </div>
+      <div class="row three-col">
+        <input type="tel" id="newStudentPhone" placeholder="Phone number" />
+        <input type="text" id="newStudentMother" placeholder="Mother" />
+        <input type="text" id="newStudentFather" placeholder="Father" />
       </div>
       <div class="row">
-        <input type="email" id="newStudentParentEmail" placeholder="Parent email" />
-        <input type="tel" id="newStudentParentPhone" placeholder="Parent phone" />
+        <input type="email" id="newStudentEmail" placeholder="E-mail" />
+      </div>
+      <div class="row">
+        <textarea id="newStudentComments" placeholder="Comments"></textarea>
       </div>
       <div class="row">
         <button class="icon-btn" onclick="addStudent()">Add student</button>
       </div>
 
+      <p class="section-title">Bulk import from Excel / CSV</p>
+      <div class="panel-box">
+        <p class="subtle" style="margin-top:0;">
+          Columns: <strong>No. of Students, Student Name, OEN, DOB (yyyy-mm-dd), Address, Phone Number, Mother, Father, E-mail, Comments</strong>.
+          Add a <strong>Grade</strong> column too if your file mixes several grades — otherwise pick the target grade below and every
+          row goes into that one sheet. A grade that doesn't exist yet is created automatically.
+        </p>
+        <div class="row">
+          <button class="ghost-btn" onclick="downloadImportTemplate()">⬇️ Download Excel template</button>
+        </div>
+        <div class="row">
+          <select id="importTargetGrade" style="flex:1;"></select>
+          <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" onchange="handleImportFile(event)" />
+        </div>
+        <div id="importPreviewWrap"></div>
+      </div>
+
       <p class="section-title">Students</p>
-      <div class="row"><select id="manageGradeFilter" style="flex:1;" onchange="onManageGradeFilterChange()"></select></div>
+      <div class="row">
+        <select id="manageGradeFilter" style="flex:1;" onchange="onManageGradeFilterChange()"></select>
+        <button class="ghost-btn" onclick="toggleAllStudentGroups(true)">Expand all</button>
+        <button class="ghost-btn" onclick="toggleAllStudentGroups(false)">Collapse all</button>
+      </div>
       <div id="studentsList"></div>
     </div>
 
@@ -258,16 +317,23 @@
 </footer>
 
 <script>
-const APP_URL = "https://script.google.com/macros/s/AKfycbwwgeTNJ5Cy8b2M4Fw6NDysWg9MTbKd21ddSIrqaQ1B_iimH59Sw1xBVi8le2xbfB9uXA/exec";
+const APP_URL = "https://script.google.com/macros/s/AKfycbyGLzhLVE6WXz3GiXdc-vYbrlWogFQ41nppLrcTIlsnpsAcXlwcXtoNSNZqa-g1fL0ROA/exec";
 const ADMIN_PIN = "2580";   // ⚠️ change before sharing the link
 // Note: teachers now enter directly with no PIN, per request. The admin PIN
 // still protects student records, contact info, and bulk email sending.
+//
+// DATA MODEL: each grade is its own sheet tab in the spreadsheet (see
+// code.gs). state.grades is just the list of tab names, in tab order.
+// state.students is every grade sheet's rows flattened into one array,
+// each tagged with its `grade` (the sheet it came from).
 
 let state = { students: [], grades: [], attendance: [] };
 let teacherSelectedGrade = null;
 let adminSelectedGrade = null;
 let dailyStatusFilter = 'absent_late';
 let adminView = 'manage';
+let pendingImport = null; // { students: [...] } awaiting confirmation
+let openStudentGroups = new Set(); // grade names currently expanded in the Students list
 
 // ---- date/time helpers (Toronto) ----
 function torontoParts_() {
@@ -317,10 +383,12 @@ async function post(action, payload) {
 }
 
 // ---- grade ordering ----
+// Grade order == the order code.gs returned the sheet tabs in (left-to-right
+// tab order), so reordering tabs in Google Sheets reorders the app too.
 function gradeNamesInOrder() {
-  const fromSheet = state.grades.map(g => g.name).filter(Boolean);
-  const extra = [...new Set(state.students.map(s => s.grade).filter(Boolean))].filter(g => fromSheet.indexOf(g) === -1);
-  return fromSheet.concat(extra);
+  const fromServer = state.grades.map(g => g.name).filter(Boolean);
+  const extra = [...new Set(state.students.map(s => s.grade).filter(Boolean))].filter(g => fromServer.indexOf(g) === -1);
+  return fromServer.concat(extra);
 }
 function gradeOrderMap() {
   const names = gradeNamesInOrder();
@@ -333,12 +401,10 @@ function sortStudents(list) {
   return list.slice().sort((a, b) => {
     const gA = order[a.grade] ?? 999, gB = order[b.grade] ?? 999;
     if (gA !== gB) return gA - gB;
-    const lA = (a.lastName || '').toLowerCase(), lB = (b.lastName || '').toLowerCase();
-    if (lA !== lB) return lA.localeCompare(lB);
-    return (a.firstName || '').toLowerCase().localeCompare((b.firstName || '').toLowerCase());
+    return (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase());
   });
 }
-function fullName(s) { return s.firstName + " " + s.lastName; }
+function fullName(s) { return s.name || ''; }
 
 function goTo(screenId) {
   ['landing', 'adminPin', 'teacherDash', 'adminDash'].forEach(id =>
@@ -531,6 +597,8 @@ function refreshAllAdminSelects() {
   document.getElementById('dailyReportGrade').innerHTML = '<option value="all">All grades</option>' + opts;
   document.getElementById('weeklyGradeSelect').innerHTML = opts || '<option value="">Add a grade first</option>';
   document.getElementById('monthlyGradeSelect').innerHTML = opts || '<option value="">Add a grade first</option>';
+  document.getElementById('importTargetGrade').innerHTML = (opts || '<option value="">Add a grade first</option>') +
+    '<option value="">— use the file\'s own Grade column —</option>';
 
   if (!adminSelectedGrade || names.indexOf(adminSelectedGrade) === -1) {
     adminSelectedGrade = names[0] || null;
@@ -553,42 +621,48 @@ function refreshAllAdminSelects() {
   }).join('');
 }
 
-// ---- Manage: grades ----
+// ---- Manage: grades (each grade == one sheet tab) ----
 async function addGrade() {
   const name = document.getElementById('newGradeName').value.trim();
   if (!name) return;
   if (gradeNamesInOrder().indexOf(name) > -1) { alert('That grade already exists.'); return; }
-  const g = { id: uid('g'), name };
-  state.grades.push(g);
   document.getElementById('newGradeName').value = '';
-  refreshAllAdminSelects();
-  renderGradesList();
   try {
-    await post('addGrade', g);
+    await post('addGrade', { name });
+    await loadState();
+    refreshAllAdminSelects();
+    renderGradesList();
+    renderStudentsList();
   } catch (err) {
-    alert("Couldn't save this grade: " + err.message);
+    alert("Couldn't create this grade: " + err.message);
   }
 }
 
 function renderGradesList() {
   const wrap = document.getElementById('gradesList');
-  if (!state.grades.length) { wrap.innerHTML = '<p class="subtle">No grades added yet.</p>'; return; }
-  wrap.innerHTML = state.grades.map(g =>
-    '<div class="card card-row">' +
-      '<p class="name">' + esc(g.name) + '</p>' +
-      '<button class="danger-btn" onclick="deleteGrade(\'' + g.id + '\',\'' + esc(g.name).replace(/'/g, "\\'") + '\')">🗑 Remove</button>' +
-    '</div>'
-  ).join('');
+  const names = gradeNamesInOrder();
+  if (!names.length) { wrap.innerHTML = '<p class="subtle">No grades added yet.</p>'; return; }
+  wrap.innerHTML = names.map(name => {
+    const count = state.students.filter(s => s.grade === name).length;
+    return '<div class="grade-chip">' +
+      '<p class="name">' + esc(name) + ' <span class="subtle">(' + count + ')</span></p>' +
+      '<button class="danger-btn" onclick="deleteGrade(\'' + esc(name).replace(/'/g, "\\'") + '\')">🗑</button>' +
+    '</div>';
+  }).join('');
 }
 
-async function deleteGrade(id, name) {
-  const inUse = state.students.some(s => s.grade === name);
-  if (inUse && !confirm(name + " still has students assigned to it. Remove the grade anyway? (Students keep their grade label.)")) return;
-  state.grades = state.grades.filter(g => g.id !== id);
-  refreshAllAdminSelects();
-  renderGradesList();
+async function deleteGrade(name) {
+  const count = state.students.filter(s => s.grade === name).length;
+  const warning = count
+    ? 'Delete the "' + name + '" sheet tab and ALL ' + count + ' student(s) on it? This cannot be undone.'
+    : 'Delete the "' + name + '" sheet tab?';
+  if (!confirm(warning)) return;
   try {
-    await post('deleteGrade', { id });
+    await post('deleteGrade', { name });
+    await loadState();
+    refreshAllAdminSelects();
+    renderGradesList();
+    renderStudentsList();
   } catch (err) {
     alert('Could not delete: ' + err.message);
   }
@@ -596,23 +670,29 @@ async function deleteGrade(id, name) {
 
 // ---- Manage: students ----
 async function addStudent() {
-  const firstName = document.getElementById('newStudentFirst').value.trim();
-  const lastName = document.getElementById('newStudentLast').value.trim();
   const grade = document.getElementById('newStudentGrade').value;
-  const parentName = document.getElementById('newStudentParentName').value.trim();
-  const parentEmail = document.getElementById('newStudentParentEmail').value.trim();
-  const parentPhone = document.getElementById('newStudentParentPhone').value.trim();
+  const name = document.getElementById('newStudentName').value.trim();
+  if (!grade || !name) { alert('Grade and student name are required.'); return; }
 
-  if (!firstName || !lastName || !grade) { alert('First name, last name, and grade are required.'); return; }
-
-  const studentId = 'UAQ-S' + String(state.students.length + 1).padStart(4, '0');
-  const s = { id: uid('s'), studentId, firstName, lastName, grade, parentName, parentEmail, parentPhone };
+  const s = {
+    id: uid('s'), grade, name,
+    no: state.students.filter(st => st.grade === grade).length + 1,
+    oen: document.getElementById('newStudentOen').value.trim(),
+    dob: document.getElementById('newStudentDob').value,
+    address: document.getElementById('newStudentAddress').value.trim(),
+    phone: document.getElementById('newStudentPhone').value.trim(),
+    mother: document.getElementById('newStudentMother').value.trim(),
+    father: document.getElementById('newStudentFather').value.trim(),
+    email: document.getElementById('newStudentEmail').value.trim(),
+    comments: document.getElementById('newStudentComments').value.trim()
+  };
   state.students.push(s);
 
-  ['newStudentFirst', 'newStudentLast', 'newStudentParentName', 'newStudentParentEmail', 'newStudentParentPhone']
+  ['newStudentName', 'newStudentOen', 'newStudentDob', 'newStudentAddress', 'newStudentPhone', 'newStudentMother', 'newStudentFather', 'newStudentEmail', 'newStudentComments']
     .forEach(id => document.getElementById(id).value = '');
 
   renderStudentsList();
+  renderGradesList();
   try {
     await post('addStudent', s);
   } catch (err) {
@@ -620,42 +700,239 @@ async function addStudent() {
   }
 }
 
+function studentMetaLine_(s) {
+  const parents = [s.mother, s.father].filter(Boolean).join(' / ');
+  return [
+    s.oen ? 'OEN ' + s.oen : '',
+    s.dob || '',
+    parents,
+    s.phone || '',
+    s.email || ''
+  ].filter(Boolean).join(' · ');
+}
+
+// Students list is grouped into a collapsible section per grade so the
+// admin isn't scrolling past every student at once — only the grades
+// they expand.
 function renderStudentsList() {
   const wrap = document.getElementById('studentsList');
   const filterGrade = document.getElementById('manageGradeFilter').value || 'all';
-  const list = sortStudents(state.students.filter(s => filterGrade === 'all' || s.grade === filterGrade));
+  const names = gradeNamesInOrder().filter(g => filterGrade === 'all' || g === filterGrade);
 
-  if (!list.length) { wrap.innerHTML = '<p class="subtle">No students in this view yet.</p>'; return; }
+  if (!state.students.length) { wrap.innerHTML = '<p class="subtle">No students added yet.</p>'; return; }
+
+  if (filterGrade !== 'all') openStudentGroups.add(filterGrade);
 
   let html = '';
-  let lastGrade = null;
-  list.forEach(s => {
-    if (s.grade !== lastGrade) {
-      html += '<p class="grade-header">' + esc(s.grade || 'No grade') + '</p>';
-      lastGrade = s.grade;
-    }
-    const metaParts = [s.studentId, s.parentName, s.parentPhone, s.parentEmail].filter(Boolean);
-    html += '<div class="card">' +
-      '<div class="card-row">' +
-        '<p class="name">' + esc(fullName(s)) + '</p>' +
-        '<button class="danger-btn" onclick="deleteStudent(\'' + s.id + '\',\'' + esc(fullName(s)).replace(/'/g, "\\'") + '\')">🗑 Remove</button>' +
-      '</div>' +
-      '<p class="meta">' + esc(metaParts.join(' · ')) + '</p>' +
-    '</div>';
+  names.forEach(gradeName => {
+    const list = sortStudents(state.students.filter(s => s.grade === gradeName));
+    if (!list.length) return;
+    const isOpen = openStudentGroups.has(gradeName);
+    const cards = list.map(s => {
+      const meta = studentMetaLine_(s);
+      return '<div class="card">' +
+        '<div class="card-row">' +
+          '<p class="name">' + esc(fullName(s)) + '</p>' +
+          '<button class="danger-btn" onclick="deleteStudent(\'' + s.grade.replace(/'/g, "\\'") + '\',\'' + s.id + '\',\'' + esc(fullName(s)).replace(/'/g, "\\'") + '\')">🗑 Remove</button>' +
+        '</div>' +
+        (meta ? '<p class="meta">' + esc(meta) + '</p>' : '') +
+        (s.comments ? '<p class="meta">Comments: ' + esc(s.comments) + '</p>' : '') +
+        (s.address ? '<p class="meta">' + esc(s.address) + '</p>' : '') +
+      '</div>';
+    }).join('');
+
+    html += '<details class="grade-group" ' + (isOpen ? 'open' : '') + ' data-grade="' + esc(gradeName).replace(/"/g, '&quot;') + '" ontoggle="onGradeGroupToggle(this)">' +
+      '<summary>' + esc(gradeName) + ' <span class="count">' + list.length + ' student' + (list.length === 1 ? '' : 's') + '</span></summary>' +
+      '<div class="group-body">' + cards + '</div>' +
+    '</details>';
   });
-  wrap.innerHTML = html;
+
+  wrap.innerHTML = html || '<p class="subtle">No students in this view yet.</p>';
 }
 
-async function deleteStudent(id, name) {
+function onGradeGroupToggle(detailsEl) {
+  const grade = detailsEl.dataset.grade;
+  if (detailsEl.open) openStudentGroups.add(grade); else openStudentGroups.delete(grade);
+}
+
+function toggleAllStudentGroups(open) {
+  document.querySelectorAll('#studentsList details.grade-group').forEach(d => {
+    d.open = open;
+    const grade = d.dataset.grade;
+    if (open) openStudentGroups.add(grade); else openStudentGroups.delete(grade);
+  });
+}
+
+async function deleteStudent(grade, id, name) {
   if (!confirm("Remove " + name + " from the roster? Their past attendance history stays in the log.")) return;
   state.students = state.students.filter(s => s.id !== id);
   refreshAllAdminSelects();
   renderStudentsList();
+  renderGradesList();
   try {
-    await post('deleteStudent', { id });
+    await post('deleteStudent', { grade, id });
   } catch (err) {
     alert('Could not delete: ' + err.message);
   }
+}
+
+// ---- Manage: bulk import from Excel/CSV ----
+function downloadImportTemplate() {
+  const rows = [
+    ['No. of Students', 'Student Name', 'OEN', 'DOB (yyyy-mm-dd)', 'Address', 'Phone Number', 'Mother', 'Father', 'E-mail', 'Comments', 'Grade (optional)'],
+    [1, 'Amina Yusuf', '123456789', '2016-04-12', '10 Yorkland Blvd, North York, ON', '416-555-0101', 'Fatima Yusuf', 'Ahmed Yusuf', 'fatima.yusuf@example.com', '', 'Grade 3']
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 8 }, { wch: 18 }, { wch: 12 }, { wch: 14 }, { wch: 26 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 24 }, { wch: 18 }, { wch: 14 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Students');
+  XLSX.writeFile(wb, 'UAQ-student-import-template.xlsx');
+}
+
+const IMPORT_HEADER_MAP_ = {
+  'no. of students': 'no', 'no': 'no', 'number': 'no',
+  'student name': 'name', 'name': 'name',
+  'oen': 'oen',
+  'dob (yyyy-mm-dd)': 'dob', 'dob': 'dob', 'date of birth': 'dob',
+  'address': 'address',
+  'phone number': 'phone', 'phone': 'phone',
+  'mother': 'mother',
+  'father': 'father',
+  'e-mail': 'email', 'email': 'email',
+  'comments': 'comments', 'comment': 'comments',
+  'grade': 'grade', 'grade (optional)': 'grade', 'class': 'grade'
+};
+
+function handleImportFile(evt) {
+  const file = evt.target.files && evt.target.files[0];
+  const wrap = document.getElementById('importPreviewWrap');
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const firstSheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, raw: false, defval: '' });
+      parseImportRows_(rows);
+    } catch (err) {
+      wrap.innerHTML = '<p class="import-warning">Couldn\'t read that file: ' + esc(err.message) + '</p>';
+      pendingImport = null;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseImportRows_(rows) {
+  const wrap = document.getElementById('importPreviewWrap');
+  if (!rows.length) { wrap.innerHTML = '<p class="import-warning">That file looks empty.</p>'; return; }
+
+  const headerRow = rows[0].map(h => String(h || '').trim().toLowerCase());
+  const colIndex = {};
+  headerRow.forEach((h, i) => { if (IMPORT_HEADER_MAP_[h]) colIndex[IMPORT_HEADER_MAP_[h]] = i; });
+
+  if (colIndex.name == null) {
+    wrap.innerHTML = '<p class="import-warning">Couldn\'t find a Student Name column. Use the downloaded template\'s headers.</p>';
+    pendingImport = null;
+    return;
+  }
+
+  const targetGrade = document.getElementById('importTargetGrade').value;
+  if (colIndex.grade == null && !targetGrade) {
+    wrap.innerHTML = '<p class="import-warning">This file has no Grade column — pick a target grade above, or add a Grade column to the file.</p>';
+    pendingImport = null;
+    return;
+  }
+
+  const perGradeCount = {};
+  state.students.forEach(s => { perGradeCount[s.grade] = (perGradeCount[s.grade] || 0) + 1; });
+
+  const students = [];
+  const problems = [];
+  const gradesUsed = new Set();
+
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    if (!row || !row.length) continue;
+    const name = String(row[colIndex.name] || '').trim();
+    const grade = (colIndex.grade != null ? String(row[colIndex.grade] || '').trim() : '') || targetGrade;
+    if (!name && !grade) continue; // blank row
+    if (!name || !grade) {
+      problems.push('Row ' + (r + 1) + ': missing student name or grade — skipped.');
+      continue;
+    }
+
+    perGradeCount[grade] = (perGradeCount[grade] || 0) + 1;
+    gradesUsed.add(grade);
+
+    students.push({
+      id: uid('s'), grade, name,
+      no: colIndex.no != null && row[colIndex.no] !== '' ? row[colIndex.no] : perGradeCount[grade],
+      oen: colIndex.oen != null ? String(row[colIndex.oen] || '').trim() : '',
+      dob: colIndex.dob != null ? String(row[colIndex.dob] || '').trim() : '',
+      address: colIndex.address != null ? String(row[colIndex.address] || '').trim() : '',
+      phone: colIndex.phone != null ? String(row[colIndex.phone] || '').trim() : '',
+      mother: colIndex.mother != null ? String(row[colIndex.mother] || '').trim() : '',
+      father: colIndex.father != null ? String(row[colIndex.father] || '').trim() : '',
+      email: colIndex.email != null ? String(row[colIndex.email] || '').trim() : '',
+      comments: colIndex.comments != null ? String(row[colIndex.comments] || '').trim() : ''
+    });
+  }
+
+  if (!students.length) {
+    wrap.innerHTML = '<p class="import-warning">No valid rows found.' + (problems.length ? ' ' + problems[0] : '') + '</p>';
+    pendingImport = null;
+    return;
+  }
+
+  const existingGrades = gradeNamesInOrder();
+  const newGrades = [...gradesUsed].filter(g => existingGrades.indexOf(g) === -1);
+
+  pendingImport = { students };
+
+  const previewRows = students.slice(0, 12).map(s =>
+    '<tr><td>' + esc(s.name) + '</td><td>' + esc(s.grade) + '</td><td>' + esc(s.email || '—') + '</td></tr>'
+  ).join('');
+
+  wrap.innerHTML =
+    '<p class="subtle" style="margin-bottom:4px;">Found <strong>' + students.length + '</strong> student' + (students.length === 1 ? '' : 's') +
+      (newGrades.length ? ', will create ' + newGrades.length + ' new sheet' + (newGrades.length === 1 ? '' : 's') + ' (' + esc(newGrades.join(', ')) + ')' : '') +
+      '.</p>' +
+    (problems.length ? '<p class="import-warning">' + problems.slice(0, 5).map(esc).join('<br>') + (problems.length > 5 ? '<br>…and ' + (problems.length - 5) + ' more.' : '') + '</p>' : '') +
+    '<div class="import-preview-table"><table>' +
+      '<tr><th>Name</th><th>Grade</th><th>E-mail</th></tr>' + previewRows +
+    '</table></div>' +
+    (students.length > 12 ? '<p class="subtle">…and ' + (students.length - 12) + ' more.</p>' : '') +
+    '<div class="row" style="margin-top:10px;"><button class="icon-btn" onclick="confirmImport()">✓ Import ' + students.length + ' student' + (students.length === 1 ? '' : 's') + '</button>' +
+    '<button class="ghost-btn" onclick="cancelImport()">Cancel</button></div>';
+}
+
+function cancelImport() {
+  pendingImport = null;
+  document.getElementById('importPreviewWrap').innerHTML = '';
+  document.getElementById('importFileInput').value = '';
+}
+
+async function confirmImport() {
+  if (!pendingImport) return;
+  const wrap = document.getElementById('importPreviewWrap');
+  wrap.innerHTML = '<p class="subtle">Importing…</p>';
+
+  try {
+    const result = await post('importStudents', { students: pendingImport.students });
+    wrap.innerHTML = result.ok
+      ? '<p class="subtle">Imported ' + (result.studentsAdded ?? pendingImport.students.length) + ' students successfully.</p>'
+      : '<p class="import-warning">Server error: ' + esc(result.error || 'unknown error') + '</p>';
+    await loadState();
+  } catch (err) {
+    wrap.innerHTML = '<p class="import-warning">Couldn\'t reach the server: ' + esc(err.message) + '</p>';
+  }
+
+  pendingImport = null;
+  document.getElementById('importFileInput').value = '';
+  refreshAllAdminSelects();
+  renderGradesList();
+  renderStudentsList();
 }
 
 // ---- Daily report ----
@@ -691,14 +968,14 @@ function renderDailyReport() {
 
   const trs = rows.map(r => {
     const s = r.student;
-    const canEmail = ['absent', 'late', 'excused'].indexOf(r.status) > -1 && !!s.parentEmail;
+    const canEmail = ['absent', 'late', 'excused'].indexOf(r.status) > -1 && !!s.email;
     return '<tr>' +
       '<td class="no-print"><input type="checkbox" class="daily-check" data-id="' + s.id + '" data-status="' + r.status + '" /></td>' +
       '<td>' + esc(fullName(s)) + '</td>' +
       '<td>' + esc(s.grade) + '</td>' +
       '<td><span class="badge badge-' + r.status + '">' + r.status + '</span></td>' +
-      '<td>' + (esc(s.parentPhone) || '—') + '</td>' +
-      '<td>' + (esc(s.parentEmail) || '—') + '</td>' +
+      '<td>' + (esc(s.phone) || '—') + '</td>' +
+      '<td>' + (esc(s.email) || '—') + '</td>' +
       '<td class="no-print">' + (canEmail
         ? '<button class="ghost-btn" onclick="emailOne(\'' + s.id + '\',\'' + date + '\',\'' + r.status + '\')">✉️ Email</button>'
         : '<span class="subtle">—</span>') + '</td>' +
@@ -868,10 +1145,36 @@ function setPrintHeader_(title, subtitle) {
   document.getElementById('printHeaderSubtitle').innerText = subtitle;
 }
 
+// Wide grids (a whole month of columns, or every student in a grade) were
+// getting cut off at the edge of the printed/PDF page. This shrinks the
+// table to fit the landscape page width right before printing, then
+// restores it afterwards so the on-screen view is unaffected.
+function fitTableToPrintPage_(wrapId) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  const table = wrap.querySelector('table');
+  if (!table) return;
+  wrap.style.zoom = '';
+  const availablePx = 1040; // landscape Letter/A4 minus ~10mm margins, at 96dpi
+  const naturalWidth = table.scrollWidth;
+  if (naturalWidth > availablePx) {
+    wrap.style.zoom = Math.max(0.35, availablePx / naturalWidth);
+  }
+}
+
+function resetPrintZoom_() {
+  ['dailyReportTableWrap', 'weeklyGridWrap', 'monthlyGridWrap'].forEach(id => {
+    const wrap = document.getElementById(id);
+    if (wrap) wrap.style.zoom = '';
+  });
+}
+window.addEventListener('afterprint', resetPrintZoom_);
+
 function printDailyReport() {
   const date = document.getElementById('dailyReportDate').value || todayStr();
   const grade = document.getElementById('dailyReportGrade').value || 'all';
   setPrintHeader_('Daily Attendance Report', (grade === 'all' ? 'All grades' : grade) + ' — ' + date);
+  fitTableToPrintPage_('dailyReportTableWrap');
   window.print();
 }
 
@@ -879,6 +1182,7 @@ function printWeeklyGrid() {
   const grade = document.getElementById('weeklyGradeSelect').value;
   const opt = document.getElementById('weeklyWeekSelect').selectedOptions[0];
   setPrintHeader_('Weekly Attendance Report', grade + ' — Week of ' + (opt ? opt.text : ''));
+  fitTableToPrintPage_('weeklyGridWrap');
   window.print();
 }
 
@@ -886,6 +1190,7 @@ function printMonthlyGrid() {
   const grade = document.getElementById('monthlyGradeSelect').value;
   const opt = document.getElementById('monthlyMonthSelect').selectedOptions[0];
   setPrintHeader_('Monthly Attendance Report', grade + ' — ' + (opt ? opt.text : ''));
+  fitTableToPrintPage_('monthlyGridWrap');
   window.print();
 }
 
