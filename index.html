@@ -61,10 +61,14 @@
   .chip.active { background: var(--teal); color: white; border-color: var(--teal); }
 
   /* compact grade chip grid — one tile per grade sheet */
-  .grade-chip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 8px; }
-  .grade-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: white; border-radius: 10px; padding: 8px 10px; box-shadow: var(--shadow); }
+  .grade-chip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 8px; }
+  .grade-chip { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: white; border-radius: 10px; padding: 8px 10px; box-shadow: var(--shadow); }
   .grade-chip .name { font-weight: 600; color: var(--teal); font-size: 13px; margin: 0; }
   .grade-chip button.danger-btn { padding: 5px 8px; font-size: 11px; }
+  .grade-chip .chip-btns { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+  .mini-icon-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--line); background: white; font-size: 11px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--teal); padding: 0; }
+  .mini-icon-btn:disabled { opacity: 0.25; cursor: default; }
+  .mini-icon-btn:disabled:hover { filter: none; }
 
   table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; font-size: 13px; }
   th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
@@ -362,7 +366,7 @@
 </footer>
 
 <script>
-const APP_URL = "https://script.google.com/macros/s/AKfycbzyc11oKgioERsW-nTPFU8WnQxGRIEuj25lkJAvjkigwMC63kHpwd3HRSLJlWkdFo7HuA/exec";
+const APP_URL = "https://script.google.com/macros/s/AKfycbx-GZW5e6Mzh4Bgbn2ay8OVbyYU7suik5okoEHYo_G_jdR8D3NZn2M0NosiChJdvObHeg/exec";
 const ADMIN_PIN = "2580";   // ⚠️ change before sharing the link
 // Note: teachers now enter directly with no PIN, per request. The admin PIN
 // still protects student records, contact info, and bulk email sending.
@@ -706,13 +710,41 @@ function renderGradesList() {
   const wrap = document.getElementById('gradesList');
   const names = gradeNamesInOrder();
   if (!names.length) { wrap.innerHTML = '<p class="subtle">No grades added yet.</p>'; return; }
-  wrap.innerHTML = names.map(name => {
+  wrap.innerHTML = names.map((name, i) => {
     const count = state.students.filter(s => s.grade === name).length;
+    const safeName = esc(name).replace(/'/g, "\\'");
     return '<div class="grade-chip">' +
       '<p class="name">' + esc(name) + ' <span class="subtle">(' + count + ')</span></p>' +
-      '<button class="danger-btn" onclick="deleteGrade(\'' + esc(name).replace(/'/g, "\\'") + '\')">🗑</button>' +
+      '<div class="chip-btns">' +
+        '<button class="mini-icon-btn" title="Move up" ' + (i === 0 ? 'disabled' : '') + ' onclick="moveGrade(\'' + safeName + '\',-1)">▲</button>' +
+        '<button class="mini-icon-btn" title="Move down" ' + (i === names.length - 1 ? 'disabled' : '') + ' onclick="moveGrade(\'' + safeName + '\',1)">▼</button>' +
+        '<button class="danger-btn" onclick="deleteGrade(\'' + safeName + '\')">🗑</button>' +
+      '</div>' +
     '</div>';
   }).join('');
+}
+
+async function moveGrade(name, direction) {
+  const names = gradeNamesInOrder();
+  const idx = names.indexOf(name);
+  const newIdx = idx + direction;
+  if (idx === -1 || newIdx < 0 || newIdx >= names.length) return;
+
+  const reordered = names.slice();
+  const tmp = reordered[idx];
+  reordered[idx] = reordered[newIdx];
+  reordered[newIdx] = tmp;
+
+  state.grades = reordered.map(n => ({ name: n }));
+  renderGradesList();
+  refreshAllAdminSelects();
+
+  try {
+    const result = await post('setGradeOrder', { order: reordered });
+    if (result && result.ok === false) alert("Couldn't save the new order: " + (result.error || 'unknown error'));
+  } catch (err) {
+    alert("Couldn't save the new order: " + err.message);
+  }
 }
 
 async function deleteGrade(name) {
