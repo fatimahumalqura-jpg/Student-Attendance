@@ -185,11 +185,26 @@
     <a class="back-link" href="#" onclick="goTo('landing')">← Back</a>
   </div>
 
+  <!-- TEACHER: PICK YOUR GRADE (shown every time, on purpose — this is what
+       stops a teacher marking attendance for whatever grade a previous
+       teacher last had open on a shared device) -->
+  <div id="teacherGradePicker" class="landing hidden" style="max-width: 420px;">
+    <p>Which grade are you marking attendance for?</p>
+    <div id="teacherGradeButtons"></div>
+    <a class="back-link" href="#" onclick="goTo('landing')">← Back</a>
+  </div>
+
   <!-- TEACHER DASHBOARD -->
   <div id="teacherDash" class="hidden">
+    <div class="row" style="align-items: center;">
+      <div style="flex: 1;">
+        <p class="subtle" style="margin: 0 0 2px;">Marking attendance for</p>
+        <p style="margin: 0; font-weight: 800; color: var(--teal); font-size: 19px;" id="teacherGradeLabel"></p>
+      </div>
+      <input type="date" id="teacherDateInput" style="max-width: 190px;" onchange="renderTeacherRoster()" />
+    </div>
     <div class="row">
-      <select id="teacherGradeSelect" style="flex:1;" onchange="onTeacherGradeChange()"></select>
-      <input type="date" id="teacherDateInput" style="flex:1;" onchange="renderTeacherRoster()" />
+      <a href="#" class="subtle" onclick="goToTeacherGradePicker(); return false;">Not your grade? Switch</a>
     </div>
     <div class="row">
       <input type="text" id="teacherNameInput" placeholder="Marking as (your name, optional)" onchange="saveTeacherName()" />
@@ -437,7 +452,7 @@ function sortStudents(list) {
 function fullName(s) { return s.name || ''; }
 
 function goTo(screenId) {
-  ['landing', 'adminPin', 'teacherDash', 'adminDash'].forEach(id =>
+  ['landing', 'adminPin', 'teacherGradePicker', 'teacherDash', 'adminDash'].forEach(id =>
     document.getElementById(id).classList.toggle('hidden', id !== screenId)
   );
   document.getElementById('adminPinError').classList.add('hidden');
@@ -451,6 +466,34 @@ async function enterTeacherDash() {
     alert("Couldn't load data: " + err.message);
     return;
   }
+  goToTeacherGradePicker();
+}
+
+// Always shown on the way in (and reachable any time via "Not your grade?
+// Switch") — deliberately never auto-skipped, even if a grade was picked
+// before on this device. That's what stops a teacher from marking
+// attendance for whichever grade the last person on a shared computer had
+// open, since they always have to consciously tap their own grade.
+function goToTeacherGradePicker() {
+  renderTeacherGradePicker();
+  goTo('teacherGradePicker');
+}
+
+function renderTeacherGradePicker() {
+  const wrap = document.getElementById('teacherGradeButtons');
+  const names = gradeNamesInOrder();
+  if (!names.length) {
+    wrap.innerHTML = '<p class="subtle">No grades set up yet — ask admin to add one.</p>';
+    return;
+  }
+  wrap.innerHTML = names.map(n =>
+    '<button class="role-btn" onclick="selectTeacherGrade(\'' + n.replace(/'/g, "\\'") + '\')">' + esc(n) + '</button>'
+  ).join('');
+}
+
+function selectTeacherGrade(grade) {
+  teacherSelectedGrade = grade;
+  localStorage.setItem('uaq_teacherGrade', grade);
 
   const savedName = localStorage.getItem('uaq_teacherName') || '';
   document.getElementById('teacherNameInput').value = savedName;
@@ -459,32 +502,13 @@ async function enterTeacherDash() {
   dateInput.value = todayStr();
   dateInput.max = todayStr();
 
-  populateTeacherGradeSelect();
+  document.getElementById('teacherGradeLabel').innerText = grade;
   renderTeacherRoster();
   goTo('teacherDash');
 }
 
 function saveTeacherName() {
   localStorage.setItem('uaq_teacherName', document.getElementById('teacherNameInput').value.trim());
-}
-
-function populateTeacherGradeSelect() {
-  const sel = document.getElementById('teacherGradeSelect');
-  const names = gradeNamesInOrder();
-  if (!names.length) {
-    sel.innerHTML = '<option value="">No grades yet — ask admin to add one</option>';
-    teacherSelectedGrade = null;
-    return;
-  }
-  const saved = localStorage.getItem('uaq_teacherGrade');
-  teacherSelectedGrade = names.indexOf(saved) > -1 ? saved : names[0];
-  sel.innerHTML = names.map(n => '<option value="' + n + '" ' + (n === teacherSelectedGrade ? 'selected' : '') + '>' + n + '</option>').join('');
-}
-
-function onTeacherGradeChange() {
-  teacherSelectedGrade = document.getElementById('teacherGradeSelect').value;
-  localStorage.setItem('uaq_teacherGrade', teacherSelectedGrade);
-  renderTeacherRoster();
 }
 
 function attendanceFor(date, studentId) {
